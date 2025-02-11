@@ -119,24 +119,35 @@ npm run dev
 
 ```
 .
-├── backend/           # Python backend server
-│   ├── src/          # Source code
-│   │   ├── agents/   # Agent-specific logic and workflows
-│   │   └── cards/    # Virtual card management
-│   ├── tests/        # Test files
-│   └── requirements.txt
+├── backend/                 # Python backend server
+│   ├── src/                # Source code
+│   │   ├── agents/         # Agent-specific logic and workflows
+│   │   ├── cards/          # Virtual card management
+│   │   ├── integrations/   # Payment provider integrations
+│   │   │   └── providers/  # PayPal, Venmo, Cash App providers
+│   │   ├── routes/         # API routes
+│   │   │   ├── cards.ts    # Card management endpoints
+│   │   │   └── funding.ts  # Funding source endpoints
+│   │   └── services/       # External service integrations
+│   ├── tests/              # Test suite
+│   └── requirements.txt    # Python dependencies
 │
-└── frontend/         # React frontend application
+└── frontend/               # React frontend application
     ├── src/
     │   ├── components/
-    │   │   └── VirtualCards/
-    │   │       ├── AgentCardCreationForm.tsx   # Agent-specific card creation
-    │   │       ├── AgentFilterBar.tsx          # Filter cards by agent type
-    │   │       └── AgentInfoPanel.tsx          # Display agent details
+    │   │   ├── VirtualCards/
+    │   │   │   ├── AgentCardCreationForm.tsx  # Agent-specific card creation
+    │   │   │   ├── AgentFilterBar.tsx         # Filter cards by agent type
+    │   │   │   └── AgentInfoPanel.tsx         # Display agent details
+    │   │   └── Integrations/
+    │   │       └── FundingSourceCard.tsx      # Funding source management
+    │   ├── hooks/
+    │   │   └── useFundingSource.ts            # Funding source connection logic
     │   ├── pages/
+    │   │   └── IntegrationsPage.tsx           # Funding sources management page
     │   └── utils/
-    ├── public/       # Static files
-    └── package.json
+    ├── public/             # Static files
+    └── package.json        # Node.js dependencies
 ```
 
 ## Development Guide
