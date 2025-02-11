@@ -2,24 +2,34 @@
   "name": "windsurf-backend",
   "version": "1.0.0",
   "description": "Backend for AI Agent Payment Platform",
-  "main": "src/index.ts",
+  "main": "src/server.ts",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/server.js",
+    "docs": "swagger-ui-express serve swagger.yaml"
   },
   "dependencies": {
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/handlebars": "^4.0.40",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/uuid": "^10.0.0",
     "bcryptjs": "^2.4.3",
+    "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.5.0",
+    "handlebars": "^4.7.8",
+    "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.1.1",
-    "uuid": "^11.0.5"
+    "plaid": "^31.0.0",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.0.5",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

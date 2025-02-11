@@ -66,7 +66,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
     { text: 'Integrations', icon: <ExtensionIcon />, path: '/integrations' },
     { text: 'Transactions', icon: <HistoryIcon />, path: '/dashboard/transactions' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/dashboard/settings' },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
   return (

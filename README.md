@@ -12,6 +12,15 @@ A modern platform for managing virtual cards with advanced spending controls, an
 - 🤖 Agent-specific card templates and validations
 - 📱 Fully responsive layout optimized for all devices
 
+### Funding Sources Integration
+- 💰 Connect multiple funding sources seamlessly:
+  - PayPal: Direct funding from PayPal balance
+  - Venmo: Instant funding via Venmo account
+  - Cash App: Quick transfers from Cash App
+- 🔄 Easy connection/disconnection of funding sources
+- 📊 Real-time connection status monitoring
+- 🔐 Secure OAuth integration for all providers
+
 ### Merchant Controls
 - 🏪 Set allowed and blocked merchant categories
 - 💰 Configure merchant-specific spending limits
@@ -36,7 +45,8 @@ A modern platform for managing virtual cards with advanced spending controls, an
 ### Security
 - 🔐 Secure authentication
 - 👥 Role-based access control
-- 📱 OAuth 2.0 support
+- 📱 OAuth 2.0 support for authentication and funding sources
+- 🔒 Secure handling of payment provider integrations
 
 ## Quick Start Guide
 
@@ -45,6 +55,15 @@ A modern platform for managing virtual cards with advanced spending controls, an
 Make sure you have the following installed on your computer:
 1. [Node.js](https://nodejs.org/) (version 18 or higher)
 2. [Python](https://www.python.org/) (version 3.11 or higher)
+
+### Required API Keys
+
+To enable funding source integrations, you'll need API keys from:
+1. PayPal Developer Dashboard
+2. Venmo Developer Portal
+3. Cash App API Portal
+
+Add these keys to your `.env` files in both frontend and backend directories.
 
 ### Starting the Platform
 

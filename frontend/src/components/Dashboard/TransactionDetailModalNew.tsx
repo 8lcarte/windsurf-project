@@ -169,14 +169,45 @@ export function TransactionDetailModal({
                 <Typography variant="body1">{transaction.notes}</Typography>
               </Grid>
             )}
+
+            {transaction.receipt && (
+              <Grid item xs={12}>
+                <Box sx={{ mt: 2 }}>
+                  <ReceiptSection
+                    content={transaction.receipt.content}
+                    metadata={transaction.receipt.metadata}
+                  />
+                </Box>
+              </Grid>
+            )}
           </Grid>
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
-        <Button variant="contained" onClick={() => console.log('Download receipt')}>
-          Download Receipt
-        </Button>
+        {transaction.receipt && (
+          <Button 
+            variant="contained" 
+            onClick={() => {
+              const receiptText = `${transaction.receipt?.content}\n\nItems:\n${
+                transaction.receipt?.metadata.items?.map(
+                  item => `${item.description}: ${item.quantity} x $${item.unitPrice} = $${item.totalPrice}`
+                ).join('\n')
+              }`;
+              const blob = new Blob([receiptText], { type: 'text/plain' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `receipt-${transaction.id}.txt`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }}
+          >
+            Download Receipt
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

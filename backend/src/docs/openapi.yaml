@@ -1,0 +1,860 @@
+openapi: 3.0.0
+info:
+  title: Digital Wallet API
+  description: API for managing digital wallets, recurring payments, and funding sources
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@yourapp.com
+
+servers:
+  - url: /api/v1
+    description: Default API server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+    VirtualCard:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        name:
+          type: string
+        lastFour:
+          type: string
+        expiryDate:
+          type: string
+        status:
+          type: string
+          enum: [active, frozen, canceled]
+        balance:
+          type: number
+        spendLimit:
+          type: number
+        frozen:
+          type: boolean
+        merchantControls:
+          type: object
+          properties:
+            allowedCategories:
+              type: array
+              items:
+                type: string
+            blockedCategories:
+              type: array
+              items:
+                type: string
+            maxAmountPerMerchant:
+              type: object
+              additionalProperties:
+                type: number
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        createdAt:
+          type: string
+          format: date-time
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          format: date-time
+        merchantName:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [completed, pending, declined]
+        category:
+          type: string
+        type:
+          type: string
+          enum: [debit, credit]
+        description:
+          type: string
+
+    PaymentMethod:
+      type: object
+      properties:
+        id:
+          type: string
+        provider:
+          type: string
+          enum: [paypal, venmo, cashapp]
+        name:
+          type: string
+        details:
+          type: string
+        isDefault:
+          type: boolean
+        lastUsed:
+          type: string
+          format: date-time
+
+    RecurringPayment:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly]
+        provider:
+          type: string
+          enum: [paypal, venmo, cashapp]
+        description:
+          type: string
+        nextPayment:
+          type: string
+          format: date-time
+        active:
+          type: boolean
+        emailNotifications:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            reminderDays:
+              type: integer
+              minimum: 0
+              maximum: 30
+            notifyOnSuccess:
+              type: boolean
+            notifyOnFailure:
+              type: boolean
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [completed, pending, failed]
+        provider:
+          type: string
+          enum: [paypal, venmo, cashapp]
+        description:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        recurring:
+          type: boolean
+
+    EmailTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [payment_reminder, payment_success, payment_failure]
+        subject:
+          type: string
+        html:
+          type: string
+        variables:
+          type: array
+          items:
+            type: string
+        isDefault:
+          type: boolean
+        agentId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+paths:
+  /virtual-cards:
+    get:
+      summary: List virtual cards
+      description: Retrieve all virtual cards for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of virtual cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VirtualCard'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      summary: Create virtual card
+      description: Create a new virtual card
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - spendLimit
+              properties:
+                name:
+                  type: string
+                spendLimit:
+                  type: number
+                merchantCategories:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Virtual card created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualCard'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /virtual-cards/{id}/number:
+    post:
+      summary: Get card number
+      description: Retrieve the full card number and CVV (secured endpoint)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Card number details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  number:
+                    type: string
+                  cvv:
+                    type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Card not found
+
+  /virtual-cards/{id}/status:
+    patch:
+      summary: Update card status
+      description: Freeze or unfreeze a virtual card
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - frozen
+              properties:
+                frozen:
+                  type: boolean
+      responses:
+        '200':
+          description: Card status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualCard'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Card not found
+
+  /virtual-cards/{id}/limit:
+    patch:
+      summary: Update spend limit
+      description: Update the spend limit of a virtual card
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - spendLimit
+              properties:
+                spendLimit:
+                  type: number
+      responses:
+        '200':
+          description: Spend limit updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualCard'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Card not found
+
+
+  /funding/payment-methods:
+    get:
+      summary: List payment methods
+      description: Retrieve all payment methods for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of payment methods
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentMethod'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Add payment method
+      description: Add a new payment method for the authenticated user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+                  enum: [paypal, venmo, cashapp]
+              required:
+                - provider
+      responses:
+        '201':
+          description: Payment method added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PaymentMethod'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /funding/payment-methods/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    
+    delete:
+      summary: Remove payment method
+      description: Remove a payment method for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Payment method removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '404':
+          description: Payment method not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /funding/payment-methods/{id}/default:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    
+    put:
+      summary: Set default payment method
+      description: Set a payment method as the default for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Default payment method updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '404':
+          description: Payment method not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /funding/recurring:
+    get:
+      summary: List recurring payments
+      description: Retrieve all recurring payments for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of recurring payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecurringPayment'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create recurring payment
+      description: Create a new recurring payment for the authenticated user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - currency
+                - frequency
+                - provider
+              properties:
+                amount:
+                  type: number
+                  format: float
+                currency:
+                  type: string
+                frequency:
+                  type: string
+                  enum: [daily, weekly, monthly]
+                provider:
+                  type: string
+                  enum: [paypal, venmo, cashapp]
+                description:
+                  type: string
+                emailNotifications:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    reminderDays:
+                      type: integer
+                    notifyOnSuccess:
+                      type: boolean
+                    notifyOnFailure:
+                      type: boolean
+      responses:
+        '201':
+          description: Recurring payment created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/RecurringPayment'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /funding/recurring/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    
+    put:
+      summary: Update recurring payment
+      description: Update an existing recurring payment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: float
+                currency:
+                  type: string
+                frequency:
+                  type: string
+                  enum: [daily, weekly, monthly]
+                provider:
+                  type: string
+                  enum: [paypal, venmo, cashapp]
+                description:
+                  type: string
+                emailNotifications:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    reminderDays:
+                      type: integer
+                    notifyOnSuccess:
+                      type: boolean
+                    notifyOnFailure:
+                      type: boolean
+      responses:
+        '200':
+          description: Recurring payment updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/RecurringPayment'
+        '404':
+          description: Recurring payment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete recurring payment
+      description: Delete an existing recurring payment
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Recurring payment deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '404':
+          description: Recurring payment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /funding/transactions:
+    get:
+      summary: List transactions
+      description: Retrieve all transactions for the authenticated user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: provider
+          in: query
+          schema:
+            type: string
+            enum: [paypal, venmo, cashapp]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [completed, pending, failed]
+        - name: recurring
+          in: query
+          schema:
+            type: boolean
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /email-templates:
+    get:
+      summary: List email templates
+      description: Retrieve all email templates for the agent
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: agentId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of email templates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmailTemplate'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create email template
+      description: Create a new email template
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - type
+                - subject
+                - html
+                - variables
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum: [payment_reminder, payment_success, payment_failure]
+                subject:
+                  type: string
+                html:
+                  type: string
+                variables:
+                  type: array
+                  items:
+                    type: string
+                agentId:
+                  type: string
+      responses:
+        '201':
+          description: Email template created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/EmailTemplate'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /email-templates/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    
+    put:
+      summary: Update email template
+      description: Update an existing email template
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                subject:
+                  type: string
+                html:
+                  type: string
+                variables:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Email template updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/EmailTemplate'
+        '404':
+          description: Email template not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete email template
+      description: Delete an existing email template
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Email template deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '404':
+          description: Email template not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

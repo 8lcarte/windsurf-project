@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 
-const router = Router();
+export const router = Router();
 
 // Helper functions
 function generateCardNumber(): string {
@@ -111,7 +111,7 @@ let virtualCards = [
 ];
 
 // Get all virtual cards for a user
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticate, (req, res) => {
   const userCards = virtualCards.filter(card => card.userId === req.user?.userId);
   // Don't send sensitive data
   const sanitizedCards = userCards.map(({ number, cvv, ...card }) => card);
@@ -119,7 +119,7 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Create a new virtual card
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticate, (req, res) => {
   const { name, spendLimit, merchantCategories = [] } = req.body;
 
   const newCard = {
@@ -150,7 +150,7 @@ router.post('/', authenticateToken, (req, res) => {
 });
 
 // Get card number (secured endpoint)
-router.post('/:id/number', authenticateToken, (req, res) => {
+router.post('/:id/number', authenticate, (req, res) => {
   const card = virtualCards.find(
     (c) => c.id === req.params.id && c.userId === req.user?.userId
   );
@@ -166,7 +166,7 @@ router.post('/:id/number', authenticateToken, (req, res) => {
 });
 
 // Update card status (freeze/unfreeze)
-router.patch('/:id/status', authenticateToken, (req, res) => {
+router.patch('/:id/status', authenticate, (req, res) => {
   const { id } = req.params;
   const { frozen } = req.body;
 
@@ -186,7 +186,7 @@ router.patch('/:id/status', authenticateToken, (req, res) => {
 });
 
 // Update spend limit
-router.patch('/:id/limit', authenticateToken, (req, res) => {
+router.patch('/:id/limit', authenticate, (req, res) => {
   const { id } = req.params;
   const { spendLimit } = req.body;
 
@@ -205,4 +205,4 @@ router.patch('/:id/limit', authenticateToken, (req, res) => {
   res.json(virtualCards[cardIndex]);
 });
 
-export const virtualCardsRouter = router;
+

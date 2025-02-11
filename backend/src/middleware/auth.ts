@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { ApiError } from './errorHandler';
 
 interface AuthRequest extends Request {
   user?: {
@@ -8,7 +9,7 @@ interface AuthRequest extends Request {
   };
 }
 
-export const authenticateToken = (
+export const authenticate = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -17,7 +18,11 @@ export const authenticateToken = (
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    const error: ApiError = new Error('Authentication token is required');
+    error.statusCode = 401;
+    error.code = 'UNAUTHORIZED';
+    error.details = { reason: 'No token provided' };
+    return next(error);
   }
 
   try {
@@ -32,6 +37,10 @@ export const authenticateToken = (
     req.user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid token' });
+    const error: ApiError = new Error('Invalid authentication token');
+    error.statusCode = 401;
+    error.code = 'UNAUTHORIZED';
+    error.details = { reason: 'Token validation failed' };
+    return next(error);
   }
 };

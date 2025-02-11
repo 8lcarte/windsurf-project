@@ -10,11 +10,14 @@ interface RegisterData extends LoginCredentials {
 }
 
 interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    fullName: string;
+  success: boolean;
+  data: {
+    token: string;
+    user: {
+      id: string;
+      email: string;
+      fullName: string;
+    };
   };
 }
 
@@ -24,18 +27,18 @@ interface OAuthResponse {
 
 export const authApi = {
   login: async (credentials: LoginCredentials) => {
-    const { data } = await api.post<AuthResponse>('/auth/login', credentials);
-    return data;
+    const response = await api.post<AuthResponse>('/auth/login', credentials);
+    return response.data.data;
   },
 
   register: async (userData: RegisterData) => {
-    const { data } = await api.post<AuthResponse>('/auth/register', userData);
-    return data;
+    const response = await api.post<AuthResponse>('/auth/register', userData);
+    return response.data.data;
   },
 
   getCurrentUser: async () => {
-    const { data } = await api.get<AuthResponse>('/auth/me');
-    return data;
+    const response = await api.get<AuthResponse>('/auth/me');
+    return response.data.data;
   },
 
   // OAuth endpoints

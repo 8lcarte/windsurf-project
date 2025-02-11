@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Failed</title>
+  {{#if customCss}}
+  <style>{{{customCss}}}</style>
+  {{/if}}
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f8fafc;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+    {{#if agentLogo}}
+    <div style="text-align: center; padding: 20px; background-color: {{headerBgColor}};">
+      <img src="{{agentLogo}}" alt="{{agentName}}" style="max-height: 50px;">
+    </div>
+    {{/if}}
+
+    <div style="padding: 20px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 48px; height: 48px; color: #ef4444; margin-bottom: 12px;">
+          <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
+        </svg>
+        <h2 style="color: #dc2626; margin: 0;">Payment Failed</h2>
+      </div>
+      
+      <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <div style="margin-bottom: 15px;">
+          <div style="color: #64748b; font-size: 14px;">Amount</div>
+          <div style="color: #1e293b; font-size: 24px; font-weight: bold;">{{formatCurrency amount currency}}</div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+          <div style="color: #64748b; font-size: 14px;">Payment Method</div>
+          <div style="color: #1e293b;">{{capitalize provider}}</div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+          <div style="color: #64748b; font-size: 14px;">Error</div>
+          <div style="color: #dc2626;">{{error}}</div>
+        </div>
+        
+        {{#if description}}
+        <div style="margin-bottom: 15px;">
+          <div style="color: #64748b; font-size: 14px;">Description</div>
+          <div style="color: #1e293b;">{{description}}</div>
+        </div>
+        {{/if}}
+      </div>
+      
+      <div style="background-color: #fee2e2; border-radius: 8px; padding: 15px; font-size: 14px; color: #991b1b;">
+        <p style="margin: 0;">Your recurring payment has failed. Please check your payment method and ensure you have sufficient funds.</p>
+      </div>
+
+      {{#if actionUrl}}
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="{{actionUrl}}" style="display: inline-block; background-color: {{buttonBgColor}}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+          Update Payment Method
+        </a>
+      </div>
+      {{/if}}
+
+      <div style="margin-top: 20px; font-size: 14px; color: #64748b;">
+        <p>If you continue to experience issues, please:</p>
+        <ol style="margin-top: 10px;">
+          <li>Verify your payment method has sufficient funds</li>
+          <li>Check if your payment method has expired</li>
+          <li>Contact your bank if payments are being blocked</li>
+          <li>Update your payment method if needed</li>
+        </ol>
+      </div>
+    </div>
+
+    {{#if agentName}}
+    <div style="text-align: center; padding: 20px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+      <p style="margin: 0; color: #64748b; font-size: 12px;">
+        Powered by {{agentName}}
+      </p>
+    </div>
+    {{/if}}
+  </div>
+</body>
+</html>

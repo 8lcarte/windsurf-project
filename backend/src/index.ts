@@ -4,6 +4,10 @@ import dotenv from 'dotenv';
 import { authRouter } from './routes/auth';
 import { virtualCardsRouter } from './routes/virtualCards';
 import budgetsRouter from './routes/budgets';
+import { receiptsRouter } from './routes/receipts';
+import { transactionsRouter } from './routes/transactions';
+import { integrationsRouter } from './routes/integrations';
+import { fundingRouter } from './routes/funding';
 
 dotenv.config();
 
@@ -20,6 +24,10 @@ const apiRouter = express.Router();
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/virtual-cards', virtualCardsRouter);
 apiRouter.use('/budgets', budgetsRouter);
+apiRouter.use('/receipts', receiptsRouter);
+apiRouter.use('/transactions', transactionsRouter);
+apiRouter.use('/integrations', integrationsRouter);
+apiRouter.use('/funding', fundingRouter);
 
 // Mount API router with /api/v1 prefix
 app.use('/api/v1', apiRouter);
