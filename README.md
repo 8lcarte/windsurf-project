@@ -5,21 +5,33 @@ A modern platform for managing virtual cards with advanced spending controls, an
 ## Features
 
 ### Virtual Cards Management
-- 💳 Create and manage virtual cards
-- 🔒 Set spending limits per card
-- 🏢 Assign merchant categories
+- 💳 Create and manage virtual cards with agent-specific workflows
+- 🔒 Set spending limits and expiry based on agent type
+- 🏢 Assign merchant categories and department tracking
 - ❄️ Freeze/unfreeze cards instantly
+- 🤖 Agent-specific card templates and validations
+- 📱 Fully responsive layout optimized for all devices
 
 ### Merchant Controls
 - 🏪 Set allowed and blocked merchant categories
 - 💰 Configure merchant-specific spending limits
 - 🚫 Automatic transaction blocking for unauthorized merchants
 
+### Agent-Specific Features
+- 🤖 Tailored workflows for different agent types:
+  - 🛒 Shopping Assistant: Item-specific cards
+  - ✈️ Travel Agent: Trip-linked cards
+  - 💼 Procurement Agent: Department tracking
+  - 💳 Subscription Manager: Recurring payment cards
+- 📅 Dynamic expiry dates based on agent type
+- 📌 Custom validation rules per agent
+- 📂 Agent-specific metadata tracking
+
 ### Analytics & Budgeting
-- 📊 Real-time spending analytics
-- 📈 Spending trends by category and merchant
-- 💼 Budget management with custom thresholds
-- 🔔 Customizable budget alerts
+- 📊 Real-time spending analytics by agent type
+- 📈 Spending trends by category and agent
+- 💼 Budget management with agent-specific thresholds
+- 🔔 Customizable alerts per agent type
 
 ### Security
 - 🔐 Secure authentication
@@ -90,16 +102,38 @@ npm run dev
 .
 ├── backend/           # Python backend server
 │   ├── src/          # Source code
+│   │   ├── agents/   # Agent-specific logic and workflows
+│   │   └── cards/    # Virtual card management
 │   ├── tests/        # Test files
 │   └── requirements.txt
 │
 └── frontend/         # React frontend application
-    ├── src/          # Source code
+    ├── src/
+    │   ├── components/
+    │   │   └── VirtualCards/
+    │   │       ├── AgentCardCreationForm.tsx   # Agent-specific card creation
+    │   │       ├── AgentFilterBar.tsx          # Filter cards by agent type
+    │   │       └── AgentInfoPanel.tsx          # Display agent details
+    │   ├── pages/
+    │   └── utils/
     ├── public/       # Static files
     └── package.json
 ```
 
 ## Development Guide
+
+### Component Guidelines
+
+#### Virtual Cards
+- Use `AgentCardCreationForm` for creating new cards
+- Implement agent-specific validation rules
+- Follow responsive design patterns for all screen sizes
+- Use the provided agent type constants
+
+#### Agent Integration
+- Extend agent types in `agents/types.ts`
+- Add new agent workflows in `agents/workflows/`
+- Update validation rules in `agents/validation/`
 
 ### Available Scripts
 

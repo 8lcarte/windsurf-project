@@ -11,6 +11,7 @@ from app.api.v1.routers import (
     visualizations,
     templates,
 )
+from app.api.v1.endpoints import ai_advisor
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
@@ -33,4 +34,7 @@ api_router.include_router(
 )
 api_router.include_router(
     templates.router, prefix="/templates", tags=["templates"]
+)
+api_router.include_router(
+    ai_advisor.router, prefix="/ai-advisor", tags=["ai-advisor"]
 )

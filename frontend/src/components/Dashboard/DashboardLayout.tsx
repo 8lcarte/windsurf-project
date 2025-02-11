@@ -26,6 +26,7 @@ import {
   Settings as SettingsIcon,
   AccountCircle as AccountCircleIcon,
   Analytics as AnalyticsIcon,
+  Extension as ExtensionIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -63,6 +64,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Virtual Cards', icon: <CreditCardIcon />, path: '/virtual-cards' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
+    { text: 'Integrations', icon: <ExtensionIcon />, path: '/integrations' },
     { text: 'Transactions', icon: <HistoryIcon />, path: '/dashboard/transactions' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/dashboard/settings' },
   ];

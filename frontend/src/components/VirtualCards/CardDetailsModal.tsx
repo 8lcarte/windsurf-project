@@ -14,7 +14,8 @@ import {
   Button,
   Switch,
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Close as CloseIcon, SmartToy as AgentIcon } from '@mui/icons-material';
+import { AgentInfoPanel } from './AgentInfoPanel';
 import { VirtualCard, Transaction } from '../../api/virtualCards';
 import React, { useState } from 'react';
 import { useSnackbar } from 'notistack';
@@ -126,13 +127,19 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
     <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">{card.name}</Typography>
+          <Box display="flex" alignItems="center">
+            {card.metadata?.agent_type && (
+              <AgentIcon sx={{ mr: 1, color: 'primary.main' }} />
+            )}
+            <Typography variant="h6">{card.name}</Typography>
+          </Box>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
           </IconButton>
         </Box>
       </DialogTitle>
       <DialogContent>
+        <AgentInfoPanel metadata={card.metadata} />
         <Box sx={{ mb: 4 }}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
             Card Details

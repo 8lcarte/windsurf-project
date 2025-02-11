@@ -49,6 +49,7 @@ export function AnalyticsPage() {
   const [topMerchants, setTopMerchants] = useState<TopMerchant[]>([]);
   const [loading, setLoading] = useState(true);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [categorySpending, setCategorySpending] = useState<Map<string, number>>(new Map());
 
   const COLORS = [
     theme.palette.primary.main,
@@ -123,6 +124,7 @@ export function AnalyticsPage() {
         setSpendingByCategory(categoryData);
         setTopMerchants(merchantData);
         setSpendingOverTime(dateData);
+        setCategorySpending(categoryMap);
       } catch (error) {
         console.error('Error fetching analytics:', error);
       } finally {
@@ -257,9 +259,9 @@ export function AnalyticsPage() {
         <BudgetManager
           budgets={budgets}
           actualSpending={Object.fromEntries(
-            Array.from(categoryMap.entries())
+            Array.from(categorySpending.entries())
           )}
-          onBudgetChange={handleBudgetChange}
+          onBudgetChange={fetchBudgets}
         />
       </Box>
     </Container>

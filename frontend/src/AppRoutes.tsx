@@ -9,6 +9,8 @@ import { DashboardPage } from './pages/DashboardPage';
 import { VirtualCardsPage } from './pages/VirtualCardsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { OAuthCallbackPage } from './pages/OAuthCallbackPage';
+import { IntegrationsPage } from './pages/IntegrationsPage';
+import { IntegrationDetailPage } from './pages/IntegrationDetailPage';
 
 export function AppRoutes() {
   return (
@@ -21,6 +23,8 @@ export function AppRoutes() {
         <Route path="dashboard" element={<ProtectedRoute><DashboardLayout><DashboardPage /></DashboardLayout></ProtectedRoute>} />
         <Route path="virtual-cards" element={<ProtectedRoute><DashboardLayout><VirtualCardsPage /></DashboardLayout></ProtectedRoute>} />
         <Route path="analytics" element={<ProtectedRoute><DashboardLayout><AnalyticsPage /></DashboardLayout></ProtectedRoute>} />
+        <Route path="integrations" element={<ProtectedRoute><DashboardLayout><IntegrationsPage /></DashboardLayout></ProtectedRoute>} />
+        <Route path="integrations/:integrationId" element={<ProtectedRoute><DashboardLayout><IntegrationDetailPage /></DashboardLayout></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
