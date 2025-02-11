@@ -1,0 +1,28 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { DashboardLayout } from './components/Dashboard/DashboardLayout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { AppLayout } from './components/Layout/AppLayout';
+import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { VirtualCardsPage } from './pages/VirtualCardsPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
+import { OAuthCallbackPage } from './pages/OAuthCallbackPage';
+
+export function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route index element={<LandingPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
+        <Route path="auth/callback" element={<OAuthCallbackPage />} />
+        <Route path="dashboard" element={<ProtectedRoute><DashboardLayout><DashboardPage /></DashboardLayout></ProtectedRoute>} />
+        <Route path="virtual-cards" element={<ProtectedRoute><DashboardLayout><VirtualCardsPage /></DashboardLayout></ProtectedRoute>} />
+        <Route path="analytics" element={<ProtectedRoute><DashboardLayout><AnalyticsPage /></DashboardLayout></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
+  );
+}

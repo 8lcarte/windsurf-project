@@ -1,104 +1,164 @@
-    # AI Agent Payment Platform
+    # Virtual Card Management Platform
 
-[![CI](https://github.com/yourusername/ai-payment-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/ai-payment-platform/actions/workflows/ci.yml)
-[![Deploy](https://github.com/yourusername/ai-payment-platform/actions/workflows/deploy.yml/badge.svg)](https://github.com/yourusername/ai-payment-platform/actions/workflows/deploy.yml)
-[![codecov](https://codecov.io/gh/yourusername/ai-payment-platform/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/ai-payment-platform)
-
-A secure payment platform enabling AI agents to make authorized financial transactions using virtual cards.
+A modern platform for managing virtual cards with advanced spending controls, analytics, and budgeting features.
 
 ## Features
 
-- 🔒 Secure virtual card management
-- 📝 Template-based card configuration
-- 💰 Spending controls and limits
-- 📊 Transaction monitoring
-- 🤖 AI agent integration
+### Virtual Cards Management
+- 💳 Create and manage virtual cards
+- 🔒 Set spending limits per card
+- 🏢 Assign merchant categories
+- ❄️ Freeze/unfreeze cards instantly
 
-## Project Structure
+### Merchant Controls
+- 🏪 Set allowed and blocked merchant categories
+- 💰 Configure merchant-specific spending limits
+- 🚫 Automatic transaction blocking for unauthorized merchants
 
-```
-.
-├── backend/           # FastAPI backend
-├── frontend/          # React frontend
-├── docs/              # Documentation
-└── .github/           # GitHub workflows and templates
-```
+### Analytics & Budgeting
+- 📊 Real-time spending analytics
+- 📈 Spending trends by category and merchant
+- 💼 Budget management with custom thresholds
+- 🔔 Customizable budget alerts
 
-## Getting Started
+### Security
+- 🔐 Secure authentication
+- 👥 Role-based access control
+- 📱 OAuth 2.0 support
+
+## Quick Start Guide
 
 ### Prerequisites
 
-- Python 3.11+
-- Node.js 18+
-- PostgreSQL 13+
-- Docker (optional)
+Make sure you have the following installed on your computer:
+1. [Node.js](https://nodejs.org/) (version 18 or higher)
+2. [Python](https://www.python.org/) (version 3.11 or higher)
 
-### Backend Setup
+### Starting the Platform
+
+#### Step 1: Start the Backend
+
+Open a terminal/command prompt and run these commands:
 
 ```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-
-# Install dependencies
+# 1. Navigate to the backend directory
 cd backend
+
+# 2. Create a Python virtual environment (first time only)
+python -m venv venv
+
+# 3. Activate the virtual environment
+# On Windows:
+venv\Scripts\activate
+# On Mac/Linux:
+source venv/bin/activate
+
+# 4. Install dependencies (first time only)
 pip install -r requirements.txt
 
-# Set up environment variables
+# 5. Set up environment variables (first time only)
 cp .env.example .env
-# Edit .env with your configuration
 
-# Run migrations
-alembic upgrade head
-
-# Start the server
-uvicorn app.main:app --reload
+# 6. Start the backend server
+python -m uvicorn src.index:app --reload --port 8000
 ```
 
-### Frontend Setup
+#### Step 2: Start the Frontend
+
+Open a new terminal window and run:
 
 ```bash
-# Install dependencies
+# 1. Navigate to the frontend directory
 cd frontend
+
+# 2. Install dependencies (first time only)
 npm install
 
-# Start development server
+# 3. Start the frontend development server
 npm run dev
 ```
 
-### Docker Setup
+#### Step 3: Access the Platform
 
-```bash
-# Build and run all services
-docker-compose up --build
+1. Open your web browser
+2. Go to `http://localhost:5173`
+3. Register a new account or log in
+
+### Project Structure
+
+```
+.
+├── backend/           # Python backend server
+│   ├── src/          # Source code
+│   ├── tests/        # Test files
+│   └── requirements.txt
+│
+└── frontend/         # React frontend application
+    ├── src/          # Source code
+    ├── public/       # Static files
+    └── package.json
 ```
 
-## Development
+## Development Guide
 
-### Running Tests
+### Available Scripts
 
+#### Backend
 ```bash
-# Backend tests
-cd backend
+# Run tests
 pytest
 
-# Frontend tests
-cd frontend
-npm test
+# Check code style
+black .
+
+# Check imports
+isort .
 ```
 
-### Code Style
-
-We use:
-- Black and isort for Python code formatting
-- ESLint and Prettier for JavaScript/TypeScript
-
+#### Frontend
 ```bash
-# Format Python code
-black .
-isort .
+# Run tests
+npm test
 
-# Format JavaScript/TypeScript code
+# Run linter
+npm run lint
+
+# Format code
+npm run format
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Backend won't start**
+   - Check if port 8000 is already in use
+   - Verify Python version (3.11+)
+   - Make sure all dependencies are installed
+   - Check .env configuration
+
+2. **Frontend won't start**
+   - Check if port 5173 is already in use
+   - Verify Node.js version (18+)
+   - Clear npm cache: `npm cache clean --force`
+   - Delete node_modules and reinstall: `rm -rf node_modules && npm install`
+
+3. **Can't log in**
+   - Verify backend is running
+   - Check browser console for errors
+   - Clear browser cache and cookies
+
+### Getting Help
+
+If you encounter any issues:
+1. Check the troubleshooting guide above
+2. Look for error messages in the terminal
+3. Check the browser console (F12) for frontend errors
+4. Review the backend logs
+
+## License
+
+MIT License - see LICENSE file for details
 npm run format
 ```
 
