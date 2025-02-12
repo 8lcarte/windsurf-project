@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "AI Agent Payment Platform",
   "scripts": {
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "install:all": "npm install && cd frontend && npm install",
+    "install:backend": "cd backend && python3 -m venv venv311 && source venv311/bin/activate && pip install -r requirements.txt",
     "frontend": "cd frontend && npm run dev",
-    "backend": "cd backend && npm run dev",
-    "dev": "concurrently --kill-others-on-fail --prefix-colors \"blue.bold,green.bold\" --prefix \"[{name}]\" --names \"backend,frontend\" \"npm run backend\" \"npm run frontend\""
+    "backend": "cd backend && source venv311/bin/activate && uvicorn app.main:app --reload --port 8000",
+    "dev": "concurrently --kill-others-on-fail --prefix-colors \"blue.bold,green.bold\" --prefix \"[{name}]\" --names \"backend,frontend\" \"npm run backend\" \"npm run frontend\"",
+    "setup": "npm run install:all && npm run install:backend"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import {
@@ -12,6 +12,7 @@ import {
   Dialog,
   IconButton,
   Tooltip,
+  Container,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -27,15 +28,29 @@ import { AgentInfoPanel } from '../components/VirtualCards/AgentInfoPanel';
 import { virtualCardsApi, VirtualCard } from '../api/virtualCards';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 
+interface VirtualCardsPageProps {
+  mode?: 'create' | 'templates' | 'settings';
+}
 
+interface CreateCardData {
+  name: string;
+  spendLimit: number;
+  customerId: string;
+  agentName: string;
+  metadata?: Record<string, any>;
+}
 
-const statusColors = {
+type CardStatus = 'active' | 'inactive' | 'expired' | 'frozen' | 'canceled';
+
+const statusColors: Record<CardStatus, 'success' | 'warning' | 'error'> = {
   active: 'success',
   inactive: 'warning',
   expired: 'error',
+  frozen: 'error',
+  canceled: 'error'
 } as const;
 
-export function VirtualCardsPage() {
+export const VirtualCardsPage: React.FC<VirtualCardsPageProps> = ({ mode }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<VirtualCard | null>(null);
   const [showCardNumber, setShowCardNumber] = useState<{id: string, number: string, cvv: string} | null>(null);
@@ -48,8 +63,6 @@ export function VirtualCardsPage() {
     queryKey: ['virtualCards'],
     queryFn: virtualCardsApi.getCards,
   });
-
-  // Removed redundant cards array conversion since we have a default value above
 
   const agentNames = useMemo(() => {
     const names = new Set<string>();
@@ -68,38 +81,15 @@ export function VirtualCardsPage() {
 
   // Mutations
   const createCardMutation = useMutation({
-    mutationFn: async (cardData: { name: string; spendLimit: number; customerId: string; agentName: string; metadata?: Record<string, any> }) => {
-      // Add validation based on agent name
-      if (cardData.agentName === 'AWS Cost Manager' && cardData.spendLimit > 10000) {
-        throw new Error('AWS Cost Manager cards require approval for limits over $10,000');
-      }
-      
-      // Add default expiry based on agent name
-      const expiryDays = {
-        'AWS Cost Manager': 90,      // Extended for AWS infrastructure
-        'SaaS Subscription Manager': 365 // Annual for subscriptions
-      }[cardData.agentName] || 30;
-
-      return virtualCardsApi.createCard({
-        name: cardData.name,
-        spendLimit: cardData.spendLimit,
-        customerId: cardData.customerId,
-        agentName: cardData.agentName,
-        metadata: {
-          ...cardData.metadata,
-          agent_name: cardData.agentName,
-          created_at: new Date().toISOString(),
-          expiry_days: expiryDays
-        }
-      });
-    },
+    mutationFn: virtualCardsApi.createCard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['virtualCards'] });
-      enqueueSnackbar('Virtual card created successfully', { variant: 'success' });
       setIsCreateModalOpen(false);
+      enqueueSnackbar('Virtual card created successfully', { variant: 'success' });
     },
-    onError: (error: Error) => {
-      enqueueSnackbar(error.message || 'Failed to create virtual card', { variant: 'error' });
+    onError: (error) => {
+      console.error('Error creating card:', error);
+      enqueueSnackbar('Failed to create virtual card', { variant: 'error' });
     },
   });
 
@@ -145,7 +135,6 @@ export function VirtualCardsPage() {
     );
   }
 
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -153,7 +142,7 @@ export function VirtualCardsPage() {
     }).format(amount);
   };
 
-  const handleCreateCard = (cardData: { name: string; spendLimit: number; customerId: string; agentType: string; metadata?: Record<string, any> }) => {
+  const handleCreateCard = (cardData: CreateCardData) => {
     createCardMutation.mutate(cardData);
   };
 
@@ -175,237 +164,239 @@ export function VirtualCardsPage() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Virtual Cards
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setIsCreateModalOpen(true)}
-        >
-          Create Card
-        </Button>
-      </Box>
-
-      <AgentFilterBar
-        selectedAgentName={selectedAgentName}
-        onAgentNameChange={setSelectedAgentName}
-        agentNames={agentNames}
-        cardCount={filteredCards.length}
-      />
-
-      <Grid 
-        container 
-        spacing={{ xs: 2, sm: 2, md: 3 }}
-        columns={{ xs: 4, sm: 8, md: 12, lg: 12, xl: 15 }}
-      >
-        {filteredCards.map((card) => (
-          <Grid 
-            item 
-            xs={4} 
-            sm={4} 
-            md={6} 
-            lg={4} 
-            xl={3} 
-            key={card.id}
+    <Container maxWidth="lg">
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+          <Typography variant="h4" component="h1">
+            Virtual Cards
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setIsCreateModalOpen(true)}
           >
-            <Card
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                position: 'relative',
-                cursor: 'pointer',
-                '&:hover': {
-                  boxShadow: (theme) => theme.shadows[4],
-                },
-              }}
-              onClick={() => handleViewDetails(card)}
+            Create Card
+          </Button>
+        </Box>
+
+        <AgentFilterBar
+          selectedAgentName={selectedAgentName}
+          onAgentNameChange={setSelectedAgentName}
+          agentNames={agentNames}
+          cardCount={filteredCards.length}
+        />
+
+        <Grid 
+          container 
+          spacing={{ xs: 2, sm: 2, md: 3 }}
+          columns={{ xs: 4, sm: 8, md: 12, lg: 12, xl: 15 }}
+        >
+          {filteredCards.map((card) => (
+            <Grid 
+              item 
+              xs={4} 
+              sm={4} 
+              md={6} 
+              lg={4} 
+              xl={3} 
+              key={card.id}
             >
-              <CardContent 
+              <Card
                 sx={{
-                  p: { xs: 2, sm: 2, md: 3 },
                   height: '100%',
                   display: 'flex',
-                  flexDirection: 'column'
+                  flexDirection: 'column',
+                  position: 'relative',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    boxShadow: (theme) => theme.shadows[4],
+                  },
                 }}
+                onClick={() => handleViewDetails(card)}
               >
-                {/* Header Section */}
-                <Box sx={{ mb: 3 }}>
-                  <Box 
-                    sx={{
-                      display: 'flex', 
-                      alignItems: { xs: 'flex-start', sm: 'center' },
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      gap: { xs: 1, sm: 0 },
-                      mb: 2
-                    }}
-                  >
-                    {card.metadata?.agent_type && (
-                      <AgentIcon sx={{ mr: 1, color: 'primary.main', fontSize: 28 }} />
-                    )}
-                    <Typography 
-                      variant="h6" 
-                      component="div" 
-                      sx={{ 
-                        flex: 1,
-                        fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
-                        wordBreak: 'break-word'
-                      }}
-                    >
-                      {card.name}
-                    </Typography>
-                    <Box display="flex" gap={1}>
-                      <Tooltip title={card.frozen ? 'Card is frozen' : 'Card is active'}>
-                        <Box component="span">
-                          <Chip
-                            label={card.frozen ? 'Frozen' : card.status}
-                            color={card.frozen ? 'error' : statusColors[card.status]}
-                            size="small"
-                            sx={{ fontWeight: 500 }}
-                          />
-                        </Box>
-                      </Tooltip>
-                    </Box>
-                  </Box>
-                  {card.metadata?.agent_type && (
-                    <Box 
-                      sx={{ 
-                        mb: 2,
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 1
-                      }}
-                    >
-                      <Chip
-                        label={card.metadata.agent_type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                        sx={{ mr: 1 }}
-                      />
-                      {card.metadata?.department && (
-                        <Chip
-                          label={`Dept: ${card.metadata.department}`}
-                          size="small"
-                          variant="outlined"
-                        />
-                      )}
-                    </Box>
-                  )}
-                </Box>
-
-                {/* Card Details Grid */}
-                <Box 
-                  sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                    gap: { xs: 1.5, sm: 2 },
-                    mb: 3,
-                    flex: 1,
-                    '& .detail-label': {
-                      color: 'text.secondary',
-                      fontSize: { xs: '0.75rem', sm: '0.8125rem', md: '0.875rem' },
-                      mb: 0.5
-                    },
-                    '& .detail-value': {
-                      fontSize: { xs: '0.875rem', sm: '0.9375rem' },
-                      fontWeight: 500,
-                      lineHeight: 1.5,
-                      wordBreak: 'break-all'
-                    }
+                <CardContent 
+                  sx={{
+                    p: { xs: 2, sm: 2, md: 3 },
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column'
                   }}
                 >
-                  <Box>
-                    <Typography className="detail-label">Customer ID</Typography>
-                    <Typography className="detail-value">{card.customerId}</Typography>
-                  </Box>
-                  {/* Card Number */}
-                  <Box>
-                    <Typography className="detail-label">Card Number</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography className="detail-value">
-                        •••• {card.lastFour}
+                  {/* Header Section */}
+                  <Box sx={{ mb: 3 }}>
+                    <Box 
+                      sx={{
+                        display: 'flex', 
+                        alignItems: { xs: 'flex-start', sm: 'center' },
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: { xs: 1, sm: 0 },
+                        mb: 2
+                      }}
+                    >
+                      {card.metadata?.agent_type && (
+                        <AgentIcon sx={{ mr: 1, color: 'primary.main', fontSize: 28 }} />
+                      )}
+                      <Typography 
+                        variant="h6" 
+                        component="div" 
+                        sx={{ 
+                          flex: 1,
+                          fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
+                          wordBreak: 'break-word'
+                        }}
+                      >
+                        {card.name}
                       </Typography>
-                      <Tooltip title="Copy card number">
-                        <IconButton
+                      <Box display="flex" gap={1}>
+                        <Tooltip title={card.frozen ? 'Card is frozen' : 'Card is active'}>
+                          <Box component="span">
+                            <Chip
+                              label={card.frozen ? 'Frozen' : card.status}
+                              color={card.frozen ? 'error' : statusColors[card.status]}
+                              size="small"
+                              sx={{ fontWeight: 500 }}
+                            />
+                          </Box>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                    {card.metadata?.agent_type && (
+                      <Box 
+                        sx={{ 
+                          mb: 2,
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 1
+                        }}
+                      >
+                        <Chip
+                          label={card.metadata.agent_type.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                           size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopyNumber(card.id);
-                          }}
-                          sx={{ ml: 1 }}
-                        >
-                          <CopyIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                          color="primary"
+                          variant="outlined"
+                          sx={{ mr: 1 }}
+                        />
+                        {card.metadata?.department && (
+                          <Chip
+                            label={`Dept: ${card.metadata.department}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                    )}
                   </Box>
 
-                  {/* Expiry */}
-                  <Box>
-                    <Typography className="detail-label">Expiry Date</Typography>
-                    <Typography className="detail-value">
-                      {card.expiryDate}
-                    </Typography>
-                  </Box>
-
-                  {/* Spend Limit */}
-                  <Box>
-                    <Typography className="detail-label">Spend Limit</Typography>
-                    <Typography className="detail-value">
-                      {formatCurrency(card.spendLimit)}
-                    </Typography>
-                  </Box>
-
-                  {/* Agent-specific Info */}
-                  {card.metadata?.agent_type && (
+                  {/* Card Details Grid */}
+                  <Box 
+                    sx={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                      gap: { xs: 1.5, sm: 2 },
+                      mb: 3,
+                      flex: 1,
+                      '& .detail-label': {
+                        color: 'text.secondary',
+                        fontSize: { xs: '0.75rem', sm: '0.8125rem', md: '0.875rem' },
+                        mb: 0.5
+                      },
+                      '& .detail-value': {
+                        fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+                        fontWeight: 500,
+                        lineHeight: 1.5,
+                        wordBreak: 'break-all'
+                      }
+                    }}
+                  >
                     <Box>
-                      <Typography className="detail-label">
-                        {card.metadata.agent_type === 'subscription_manager' ? 'Billing Cycle' :
-                         card.metadata.agent_type === 'travel_agent' ? 'Trip ID' :
-                         card.metadata.agent_type === 'procurement_agent' ? 'PO Number' :
-                         'Transaction Type'}
-                      </Typography>
+                      <Typography className="detail-label">Customer ID</Typography>
+                      <Typography className="detail-value">{card.customerId}</Typography>
+                    </Box>
+                    {/* Card Number */}
+                    <Box>
+                      <Typography className="detail-label">Card Number</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography className="detail-value">
+                          •••• {card.lastFour}
+                        </Typography>
+                        <Tooltip title="Copy card number">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyNumber(card.id);
+                            }}
+                            sx={{ ml: 1 }}
+                          >
+                            <CopyIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+
+                    {/* Expiry */}
+                    <Box>
+                      <Typography className="detail-label">Expiry Date</Typography>
                       <Typography className="detail-value">
-                        {card.metadata.billing_cycle ||
-                         card.metadata.trip_id ||
-                         card.metadata.po_number ||
-                         'One-time'}
+                        {card.expiryDate}
                       </Typography>
                     </Box>
-                  )}
-                </Box>
 
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Available Balance
-                  </Typography>
-                  <Typography variant="h6" color="primary.main">
-                    {formatCurrency(card.balance)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    of {formatCurrency(card.spendLimit)} limit
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                    {/* Spend Limit */}
+                    <Box>
+                      <Typography className="detail-label">Spend Limit</Typography>
+                      <Typography className="detail-value">
+                        {formatCurrency(card.spendLimit)}
+                      </Typography>
+                    </Box>
 
-      <CreateCardModal
-        open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateCard}
-      />
+                    {/* Agent-specific Info */}
+                    {card.metadata?.agent_type && (
+                      <Box>
+                        <Typography className="detail-label">
+                          {card.metadata.agent_type === 'subscription_manager' ? 'Billing Cycle' :
+                           card.metadata.agent_type === 'travel_agent' ? 'Trip ID' :
+                           card.metadata.agent_type === 'procurement_agent' ? 'PO Number' :
+                           'Transaction Type'}
+                        </Typography>
+                        <Typography className="detail-value">
+                          {card.metadata.billing_cycle ||
+                           card.metadata.trip_id ||
+                           card.metadata.po_number ||
+                           'One-time'}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
 
-      <CardDetailsModal
-        card={selectedCard}
-        onClose={() => setSelectedCard(null)}
-      />
-    </Box>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Available Balance
+                    </Typography>
+                    <Typography variant="h6" color="primary.main">
+                      {formatCurrency(card.balance)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      of {formatCurrency(card.spendLimit)} limit
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+
+        <CreateCardModal
+          open={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateCard}
+        />
+
+        <CardDetailsModal
+          card={selectedCard}
+          onClose={() => setSelectedCard(null)}
+        />
+      </Box>
+    </Container>
   );
 }

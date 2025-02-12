@@ -1,5 +1,26 @@
 import { api } from './api';
 
+export interface Transaction {
+  id: string;
+  date: string;
+  merchantName: string;
+  amount: number;
+  status: 'completed' | 'pending' | 'declined';
+  category: string;
+  description: string;
+  type: 'credit' | 'debit';
+}
+
+export interface AgentMetadata {
+  agent_name: string;
+  agent_type: string;
+  department: string;
+  billing_cycle?: string;
+  trip_id?: string;
+  po_number?: string;
+  [key: string]: any;
+}
+
 export interface VirtualCard {
   id: string;
   userId: string;
@@ -9,7 +30,7 @@ export interface VirtualCard {
   lastFour: string;
   expiryDate: string;
   cvv: string;
-  status: 'active' | 'frozen' | 'canceled';
+  status: 'active' | 'inactive' | 'frozen' | 'expired';
   balance: number;
   spendLimit: number;
   frozen: boolean;
@@ -19,25 +40,8 @@ export interface VirtualCard {
     blockedCategories: string[];
     maxAmountPerMerchant?: Record<string, number>;
   };
-  metadata?: {
-    agent_name?: string;
-    agent_description?: string;
-    department?: string;
-    billing_cycle?: string;
-    trip_id?: string;
-    po_number?: string;
-    [key: string]: any;
-  };
+  metadata: AgentMetadata;
   createdAt: string;
-}
-
-export interface Transaction {
-  id: string;
-  date: string;
-  merchantName: string;
-  amount: number;
-  status: 'completed' | 'pending' | 'declined';
-  category: string;
 }
 
 export interface CreateCardData {
@@ -55,34 +59,53 @@ export interface UpdateCardAssociationData {
   metadata?: Record<string, any>;
 }
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}
+
 export const virtualCardsApi = {
   getCards: async () => {
-    const response = await api.get<VirtualCard[]>('/virtual-cards');
-    return response.data;
+    const response = await api.get<ApiResponse<VirtualCard[]>>('/virtual-cards');
+    return response.data.data;
   },
 
-  createCard: (data: CreateCardData) =>
-    api.post<VirtualCard>('/virtual-cards', data),
+  createCard: async (data: CreateCardData) => {
+    const response = await api.post<ApiResponse<VirtualCard>>('/virtual-cards', data);
+    return response.data.data;
+  },
 
-  getCard: (id: string) =>
-    api.get<VirtualCard>(`/virtual-cards/${id}`),
+  getCard: async (id: string) => {
+    const response = await api.get<ApiResponse<VirtualCard>>(`/virtual-cards/${id}`);
+    return response.data.data;
+  },
 
-  getCardNumber: (id: string) =>
-    api.post<{ number: string; cvv: string }>(`/virtual-cards/${id}/number`),
+  getCardNumber: async (id: string) => {
+    const response = await api.post<ApiResponse<{ number: string; cvv: string }>>(`/virtual-cards/${id}/number`);
+    return response.data.data;
+  },
 
-  updateStatus: (id: string, frozen: boolean) =>
-    api.patch<VirtualCard>(`/virtual-cards/${id}/status`, { frozen }),
+  updateStatus: async (id: string, frozen: boolean) => {
+    const response = await api.patch<ApiResponse<VirtualCard>>(`/virtual-cards/${id}/status`, { frozen });
+    return response.data.data;
+  },
 
-  updateLimit: (id: string, spendLimit: number) =>
-    api.patch<VirtualCard>(`/virtual-cards/${id}/limit`, { spendLimit }),
+  updateLimit: async (id: string, spendLimit: number) => {
+    const response = await api.patch<ApiResponse<VirtualCard>>(`/virtual-cards/${id}/limit`, { spendLimit });
+    return response.data.data;
+  },
     
-  updateMerchantControls: (id: string, data: {
+  updateMerchantControls: async (id: string, data: {
     allowedCategories: string[];
     blockedCategories: string[];
     maxAmountPerMerchant?: Record<string, number>;
-  }) =>
-    api.patch<VirtualCard>(`/virtual-cards/${id}/merchant-controls`, data),
+  }) => {
+    const response = await api.patch<ApiResponse<VirtualCard>>(`/virtual-cards/${id}/merchant-controls`, data);
+    return response.data.data;
+  },
 
-  updateCardAssociation: (id: string, data: UpdateCardAssociationData) =>
-    api.patch<VirtualCard>(`/virtual-cards/${id}/association`, data),
+  updateCardAssociation: async (id: string, data: UpdateCardAssociationData) => {
+    const response = await api.patch<ApiResponse<VirtualCard>>(`/virtual-cards/${id}/association`, data);
+    return response.data.data;
+  },
 };

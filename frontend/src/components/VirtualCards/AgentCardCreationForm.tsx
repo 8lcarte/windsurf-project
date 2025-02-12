@@ -10,14 +10,14 @@ import {
   InputAdornment,
   FormHelperText,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import {
   SmartToy as AgentIcon,
-  Flight as FlightIcon,
-  ShoppingCart as ShoppingIcon,
-  Business as ProcurementIcon,
-  Subscriptions as SubscriptionIcon,
+  Warning as WarningIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
+import { agentsApi } from '../../api/agents';
 
 export interface AgentCardFormData {
   name: string;
@@ -34,44 +34,27 @@ interface AgentCardCreationFormProps {
   errors?: Record<string, string>;
 }
 
-const AVAILABLE_AGENTS = [
-  {
-    id: 'aws_cost_manager',
-    name: 'AWS Cost Manager',
-    icon: ProcurementIcon,
-    description: 'For managing AWS infrastructure costs and service payments',
-    defaultLimit: 10000,
-    metadata: {
-      allowed_categories: ['CLOUD_SERVICES', 'SOFTWARE'],
-      department: 'Engineering',
-      requires_approval: true,
-      approval_threshold: 5000
-    }
-  },
-  {
-    id: 'saas_subscription_manager',
-    name: 'SaaS Subscription Manager',
-    icon: SubscriptionIcon,
-    description: 'For managing recurring software and service payments',
-    defaultLimit: 2000,
-    metadata: {
-      recurring: true,
-      billing_cycle: 'monthly',
-      auto_suspend_on_overuse: true
-    }
-  }
-];
-
 export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardCreationFormProps) {
-  const selectedAgent = AVAILABLE_AGENTS.find(agent => agent.name === formData.agentName);
+  // Fetch available agents
+  const { data: agents = [], isLoading, error } = useQuery({
+    queryKey: ['agents'],
+    queryFn: agentsApi.getAgents,
+    select: (data) => data.filter(agent => agent.status === 'active'), // Only show active agents
+  });
+
+  const selectedAgent = agents.find(agent => agent.name === formData.agentName);
 
   const handleAgentNameChange = (name: string) => {
-    const agent = AVAILABLE_AGENTS.find(a => a.name === name);
+    const agent = agents.find(a => a.name === name);
     if (agent) {
       onChange({
         agentName: name,
-        spendLimit: agent.defaultLimit,
-        metadata: agent.metadata
+        spendLimit: agent.daily_spend_limit, // Use the agent's configured spend limit
+        metadata: {
+          agent_type: agent.type,
+          department: 'Default', // This could be customizable
+          requires_approval: agent.risk_level === 'high' || agent.risk_level === 'critical',
+        }
       });
     }
   };
@@ -79,60 +62,40 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
   const getAgentSpecificFields = () => {
     if (!selectedAgent) return null;
 
-    switch (selectedAgent.id) {
-      case 'aws_cost_manager':
-        return (
-          <>
-            <TextField
-              label="Department"
-              fullWidth
-              value={formData.metadata.department || ''}
-              onChange={(e) => onChange({
-                metadata: { ...formData.metadata, department: e.target.value }
-              })}
-              placeholder="e.g., Engineering, DevOps"
-            />
-            <TextField
-              label="Project Code"
-              fullWidth
-              value={formData.metadata.project_code || ''}
-              onChange={(e) => onChange({
-                metadata: { ...formData.metadata, project_code: e.target.value }
-              })}
-              placeholder="e.g., PROJ-123"
-            />
-          </>
-        );
-
-      case 'saas_subscription_manager':
-        return (
-          <>
-            <TextField
-              label="Service Name"
-              fullWidth
-              value={formData.metadata.service_name || ''}
-              onChange={(e) => onChange({
-                metadata: { ...formData.metadata, service_name: e.target.value }
-              })}
-              placeholder="e.g., Jira, Confluence"
-            />
-            <TextField
-              label="Billing Cycle"
-              select
-              fullWidth
-              value={formData.metadata.billing_cycle || 'monthly'}
-              onChange={(e) => onChange({
-                metadata: { ...formData.metadata, billing_cycle: e.target.value }
-              })}
-            >
-              <MenuItem value="monthly">Monthly</MenuItem>
-              <MenuItem value="quarterly">Quarterly</MenuItem>
-              <MenuItem value="annual">Annual</MenuItem>
-            </TextField>
-          </>
-        );
-    }
+    return (
+      <>
+        <TextField
+          label="Department"
+          fullWidth
+          value={formData.metadata.department || ''}
+          onChange={(e) => onChange({
+            metadata: { ...formData.metadata, department: e.target.value }
+          })}
+          placeholder="e.g., Engineering, Sales"
+        />
+        {selectedAgent.risk_level === 'high' || selectedAgent.risk_level === 'critical' ? (
+          <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <WarningIcon color="warning" />
+            <Typography variant="body2" color="warning.main">
+              This agent has a {selectedAgent.risk_level} risk level and may require additional approval.
+            </Typography>
+          </Box>
+        ) : null}
+      </>
+    );
   };
+
+  if (isLoading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return (
+      <Typography color="error">
+        Error loading agents: {error instanceof Error ? error.message : 'Unknown error'}
+      </Typography>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -149,10 +112,10 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
             )
           }
         >
-          {AVAILABLE_AGENTS.map((agent) => (
-            <MenuItem key={agent.name} value={agent.name}>
+          {agents.map((agent) => (
+            <MenuItem key={agent.id} value={agent.name}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <agent.icon sx={{ mr: 1 }} />
+                <AgentIcon sx={{ mr: 1 }} />
                 {agent.name}
               </Box>
             </MenuItem>
@@ -166,17 +129,25 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
       {selectedAgent && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            {selectedAgent.description}
+            Type: {selectedAgent.type}
           </Typography>
           <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            {Object.entries(selectedAgent.metadata).map(([key, value]) => (
-              <Chip
-                key={key}
-                label={`${key.replace(/_/g, ' ')}: ${value.toString()}`}
-                size="small"
-                variant="outlined"
-              />
-            ))}
+            <Chip
+              label={`Daily Limit: $${selectedAgent.daily_spend_limit.toLocaleString()}`}
+              size="small"
+              variant="outlined"
+            />
+            <Chip
+              label={`Monthly Limit: $${selectedAgent.monthly_spend_limit.toLocaleString()}`}
+              size="small"
+              variant="outlined"
+            />
+            <Chip
+              label={`Risk Level: ${selectedAgent.risk_level}`}
+              size="small"
+              variant="outlined"
+              color={selectedAgent.risk_level === 'high' || selectedAgent.risk_level === 'critical' ? 'error' : 'default'}
+            />
           </Box>
         </Box>
       )}
@@ -213,7 +184,7 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
         value={formData.spendLimit}
         onChange={(e) => onChange({ spendLimit: Number(e.target.value) })}
         error={!!errors?.spendLimit}
-        helperText={errors?.spendLimit}
+        helperText={errors?.spendLimit || (selectedAgent && `Daily limit for this agent: $${selectedAgent.daily_spend_limit.toLocaleString()}`)}
       />
 
       {getAgentSpecificFields()}

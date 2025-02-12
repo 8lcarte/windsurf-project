@@ -305,9 +305,8 @@ export function TransactionList() {
             </Avatar>
           </ListItemAvatar>
           <ListItemText
-            component="div"
             primary={
-              <Box component="div" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography component="span" variant="subtitle1">
                   {transaction.description}
                 </Typography>
@@ -321,18 +320,16 @@ export function TransactionList() {
               </Box>
             }
             secondary={
-              <Box component="div" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                 <Typography component="span" variant="body2" color="text.secondary">
                   {formatDate(transaction.date)}
                 </Typography>
-                <Box component="div">
-                  <Chip
-                    label={transaction.status}
-                    size="small"
-                    color={statusColors[transaction.status]}
-                    sx={{ height: 20 }}
-                  />
-                </Box>
+                <Chip
+                  label={transaction.status}
+                  size="small"
+                  color={statusColors[transaction.status]}
+                  sx={{ height: 20 }}
+                />
               </Box>
             }
           />

@@ -28,10 +28,13 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    strictPort: true,  // Fail if port 3000 is not available
     proxy: {
-      '/api': {
+      '/api/v1': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        secure: false,
+        ws: true,
       },
     },
   },

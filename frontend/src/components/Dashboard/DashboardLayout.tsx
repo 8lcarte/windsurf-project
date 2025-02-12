@@ -27,6 +27,7 @@ import {
   AccountCircle as AccountCircleIcon,
   Analytics as AnalyticsIcon,
   Extension as ExtensionIcon,
+  SmartToy as AgentIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -63,6 +64,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Virtual Cards', icon: <CreditCardIcon />, path: '/virtual-cards' },
+    { text: 'Agent Management', icon: <AgentIcon />, path: '/agents' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
     { text: 'Integrations', icon: <ExtensionIcon />, path: '/integrations' },
     { text: 'Transactions', icon: <HistoryIcon />, path: '/dashboard/transactions' },

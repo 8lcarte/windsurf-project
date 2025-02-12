@@ -10,7 +10,16 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     DEBUG: bool = False
+    PORT: int = 8000
+    JWT_SECRET: str
 
+    # OpenAI
+    OPENAI_API_KEY: str
+    OPENAI_MODEL_NAME: str = "gpt-4-1106-preview"
+    OPENAI_MAX_TOKENS: int = 4000
+    OPENAI_TEMPERATURE: float = 0.7
+    OPENAI_REQUEST_TIMEOUT: int = 60
+    
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 

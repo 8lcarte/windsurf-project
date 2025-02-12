@@ -1,57 +1,47 @@
-from typing import Generator, Optional
-
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import ValidationError
 
 from app.core.config import settings
-from app.core.security import verify_password
-from app.db.session import get_db
-from app.models.user import User
-from app.crud.crud_user import user
-from app.schemas.token import TokenPayload
+from app.schemas.user import User
 
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/auth/login"
-)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
 
-async def get_current_user(
-    db: AsyncSession = Depends(get_db),
-    token: str = Depends(reusable_oauth2)
-) -> User:
-    """Get the current authenticated user."""
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=["HS256"]
-        )
-        token_data = TokenPayload(**payload)
-    except (JWTError, ValidationError):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Could not validate credentials",
-        )
-    user_obj = await user.get(db, id=token_data.sub)
-    if not user_obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+# Mock user storage (this would normally come from a database)
+mock_users = {}
+
+async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[User]:
+    """Get the current user from the token."""
+    if not token:
+        return None
+        
+    if not token.startswith("mock_token_"):
+        return None
+        
+    email = token.replace("mock_token_", "")
+    user = mock_users.get(email)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user_obj
+        return None
+        
+    return user
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user),
 ) -> User:
     """Get the current active user."""
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 async def get_current_active_superuser(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
 ) -> User:
     """Get the current active superuser."""
     if not current_user.is_superuser:

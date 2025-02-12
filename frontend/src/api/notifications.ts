@@ -10,12 +10,24 @@ export interface Notification {
   createdAt: string;
 }
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}
+
 export const notificationsApi = {
-  getAll: () => api.get<Notification[]>('/notifications'),
+  getAll: async () => {
+    const response = await api.get<ApiResponse<Notification[]>>('/notifications');
+    return response.data;
+  },
   
-  markAsRead: (id: string) =>
-    api.patch(`/notifications/${id}/read`),
+  markAsRead: async (id: string) => {
+    const response = await api.patch<ApiResponse<Notification>>(`/notifications/${id}/read`);
+    return response.data.data;
+  },
   
-  delete: (id: string) =>
-    api.delete(`/notifications/${id}`),
+  delete: async (id: string) => {
+    const response = await api.delete<ApiResponse<void>>(`/notifications/${id}`);
+    return response.data.success;
+  },
 };

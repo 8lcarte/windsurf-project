@@ -12,6 +12,11 @@ import { OAuthCallbackPage } from './pages/OAuthCallbackPage';
 import { IntegrationsPage } from './pages/IntegrationsPage';
 import { IntegrationDetailPage } from './pages/IntegrationDetailPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AgentsPage } from './pages/AgentsPage';
+import { CreateAgentPage } from './pages/CreateAgentPage';
+import { AgentDetail } from './components/Agents/AgentDetail';
+import { AgentConfiguration } from './components/Agents/AgentConfiguration';
+import { AgentAnalytics } from './components/Agents/AgentAnalytics';
 
 export function AppRoutes() {
   return (
@@ -30,6 +35,14 @@ export function AppRoutes() {
         <Route path="integrations" element={<ProtectedRoute><DashboardLayout><IntegrationsPage /></DashboardLayout></ProtectedRoute>} />
         <Route path="integrations/:integrationId" element={<ProtectedRoute><DashboardLayout><IntegrationDetailPage /></DashboardLayout></ProtectedRoute>} />
         <Route path="settings" element={<ProtectedRoute><DashboardLayout><SettingsPage /></DashboardLayout></ProtectedRoute>} />
+        
+        {/* Agent Management Routes */}
+        <Route path="agents" element={<ProtectedRoute><DashboardLayout><AgentsPage /></DashboardLayout></ProtectedRoute>} />
+        <Route path="agents/new" element={<ProtectedRoute><DashboardLayout><CreateAgentPage /></DashboardLayout></ProtectedRoute>} />
+        <Route path="agents/:id" element={<ProtectedRoute><DashboardLayout><AgentDetail /></DashboardLayout></ProtectedRoute>} />
+        <Route path="agents/:id/config" element={<ProtectedRoute><DashboardLayout><AgentConfiguration /></DashboardLayout></ProtectedRoute>} />
+        <Route path="agents/:id/analytics" element={<ProtectedRoute><DashboardLayout><AgentAnalytics /></DashboardLayout></ProtectedRoute>} />
+        
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

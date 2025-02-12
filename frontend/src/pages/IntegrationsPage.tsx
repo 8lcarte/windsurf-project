@@ -17,12 +17,20 @@ import {
   AccountBalanceWallet as WalletIcon,
   Payment as PayPalIcon,
   LocalAtm as CashAppIcon,
+  AutoAwesome,
 } from '@mui/icons-material';
 import { FundingSourceCard } from '../components/Integrations/FundingSourceCard';
 import { useSnackbar } from 'notistack';
 import { useFundingSource } from '../hooks/useFundingSource';
 
 const platformIntegrations = [
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    description: 'Create intelligent AI agents with secure payment capabilities using OpenAI.',
+    icon: AutoAwesome,
+    status: 'Available',
+  },
   {
     id: 'langchain',
     name: 'LangChain',

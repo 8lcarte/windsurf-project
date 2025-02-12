@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { Notification, notificationsApi } from '../api/notifications';
+import { useAuth } from './AuthContext';
 
 interface NotificationsContextType {
   notifications: Notification[];
@@ -31,8 +32,11 @@ export function NotificationsProvider({
 }: NotificationsProviderProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { enqueueSnackbar } = useSnackbar();
+  const { isAuthenticated } = useAuth();
 
   const fetchNotifications = async () => {
+    if (!isAuthenticated) return;
+    
     try {
       const response = await notificationsApi.getAll();
       const newNotifications = response.data;
@@ -65,13 +69,19 @@ export function NotificationsProvider({
   };
 
   useEffect(() => {
+    // Only start polling if authenticated
+    if (!isAuthenticated) {
+      setNotifications([]);
+      return;
+    }
+
     fetchNotifications();
     
     // Set up polling
     const interval = setInterval(fetchNotifications, pollingInterval);
     
     return () => clearInterval(interval);
-  }, [pollingInterval]);
+  }, [pollingInterval, isAuthenticated]);
 
   const markAsRead = async (id: string) => {
     try {

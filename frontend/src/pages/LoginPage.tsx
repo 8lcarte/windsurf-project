@@ -1,27 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Container, Paper, TextField, Button, Typography, Link, CircularProgress } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { OAuthButtons } from '../components/Auth/OAuthButtons';
 
 export function LoginPage() {
-  const { login } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, isAuthenticated, isLoading, isInitialized } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
+  // If already authenticated, redirect to dashboard or previous location
+  if (isInitialized && isAuthenticated) {
+    const from = location.state?.from?.pathname || '/dashboard';
+    return <Navigate to={from} replace />;
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
+    setError(null);
     
     try {
       await login(formData.email, formData.password);
     } catch (error) {
-      // Error is handled by the auth context
+      setError(error instanceof Error ? error.message : 'Failed to login');
+      console.error('Login error:', error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -32,6 +43,20 @@ export function LoginPage() {
       [name]: value,
     }));
   };
+
+  // Show loading spinner while auth is initializing
+  if (!isInitialized || isLoading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
@@ -50,7 +75,7 @@ export function LoginPage() {
             onChange={handleChange}
             margin="normal"
             required
-            disabled={isLoading}
+            disabled={isSubmitting}
             autoComplete="email"
           />
           
@@ -63,7 +88,7 @@ export function LoginPage() {
             onChange={handleChange}
             margin="normal"
             required
-            disabled={isLoading}
+            disabled={isSubmitting}
             autoComplete="current-password"
           />
           
@@ -72,10 +97,10 @@ export function LoginPage() {
             type="submit"
             variant="contained"
             size="large"
-            disabled={isLoading}
+            disabled={isSubmitting}
             sx={{ mt: 3 }}
           >
-            {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
           </Button>
 
           <OAuthButtons />

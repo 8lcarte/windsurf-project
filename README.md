@@ -1,301 +1,25 @@
-    # Virtual Card Management Platform
-
-A modern platform for managing virtual cards with advanced spending controls, analytics, and budgeting features.
-
-## Features
-
-### Virtual Cards Management
-- 💳 Create and manage virtual cards with agent-specific workflows
-- 🔒 Set spending limits and expiry based on agent type
-- 🏢 Assign merchant categories and department tracking
-- ❄️ Freeze/unfreeze cards instantly
-- 🤖 Agent-specific card templates and validations
-- 📱 Fully responsive layout optimized for all devices
-
-### Funding Sources Integration
-- 💰 Connect multiple funding sources seamlessly:
-  - PayPal: Direct funding from PayPal balance
-  - Venmo: Instant funding via Venmo account
-  - Cash App: Quick transfers from Cash App
-- 🔄 Easy connection/disconnection of funding sources
-- 📊 Real-time connection status monitoring
-- 🔐 Secure OAuth integration for all providers
-
-### Merchant Controls
-- 🏪 Set allowed and blocked merchant categories
-- 💰 Configure merchant-specific spending limits
-- 🚫 Automatic transaction blocking for unauthorized merchants
-
-### Agent-Specific Features
-- 🤖 Tailored workflows for different agent types:
-  - 🛒 Shopping Assistant: Item-specific cards
-  - ✈️ Travel Agent: Trip-linked cards
-  - 💼 Procurement Agent: Department tracking
-  - 💳 Subscription Manager: Recurring payment cards
-- 📅 Dynamic expiry dates based on agent type
-- 📌 Custom validation rules per agent
-- 📂 Agent-specific metadata tracking
-
-### Analytics & Budgeting
-- 📊 Real-time spending analytics by agent type
-- 📈 Spending trends by category and agent
-- 💼 Budget management with agent-specific thresholds
-- 🔔 Customizable alerts per agent type
-
-### Security
-- 🔐 Secure authentication
-- 👥 Role-based access control
-- 📱 OAuth 2.0 support for authentication and funding sources
-- 🔒 Secure handling of payment provider integrations
-
-## Quick Start Guide
-
-### Prerequisites
-
-Make sure you have the following installed on your computer:
-1. [Node.js](https://nodejs.org/) (version 18 or higher)
-2. [Python](https://www.python.org/) (version 3.11 or higher)
-
-### Required API Keys
-
-To enable funding source integrations, you'll need API keys from:
-1. PayPal Developer Dashboard
-2. Venmo Developer Portal
-3. Cash App API Portal
-
-Add these keys to your `.env` files in both frontend and backend directories.
-
-### Starting the Platform
-
-#### Step 1: Start the Backend
-
-Open a terminal/command prompt and run these commands:
-
-```bash
-# 1. Navigate to the backend directory
-cd backend
-
-# 2. Create a Python virtual environment (first time only)
-python -m venv venv
-
-# 3. Activate the virtual environment
-# On Windows:
-venv\Scripts\activate
-# On Mac/Linux:
-source venv/bin/activate
-
-# 4. Install dependencies (first time only)
-pip install -r requirements.txt
-
-# 5. Set up environment variables (first time only)
-cp .env.example .env
-
-# 6. Start the backend server
-python -m uvicorn src.index:app --reload --port 8000
-```
-
-#### Step 2: Start the Frontend
-
-Open a new terminal window and run:
-
-```bash
-# 1. Navigate to the frontend directory
-cd frontend
-
-# 2. Install dependencies (first time only)
-npm install
-
-# 3. Start the frontend development server
-npm run dev
-```
-
-#### Step 3: Access the Platform
-
-1. Open your web browser
-2. Go to `http://localhost:5173`
-3. Register a new account or log in
-
-### Project Structure
-
-```
-.
-├── backend/                 # Python backend server
-│   ├── src/                # Source code
-│   │   ├── agents/         # Agent-specific logic and workflows
-│   │   ├── cards/          # Virtual card management
-│   │   ├── integrations/   # Payment provider integrations
-│   │   │   └── providers/  # PayPal, Venmo, Cash App providers
-│   │   ├── routes/         # API routes
-│   │   │   ├── cards.ts    # Card management endpoints
-│   │   │   └── funding.ts  # Funding source endpoints
-│   │   └── services/       # External service integrations
-│   ├── tests/              # Test suite
-│   └── requirements.txt    # Python dependencies
-│
-└── frontend/               # React frontend application
-    ├── src/
-    │   ├── components/
-    │   │   ├── VirtualCards/
-    │   │   │   ├── AgentCardCreationForm.tsx  # Agent-specific card creation
-    │   │   │   ├── AgentFilterBar.tsx         # Filter cards by agent type
-    │   │   │   └── AgentInfoPanel.tsx         # Display agent details
-    │   │   └── Integrations/
-    │   │       └── FundingSourceCard.tsx      # Funding source management
-    │   ├── hooks/
-    │   │   └── useFundingSource.ts            # Funding source connection logic
-    │   ├── pages/
-    │   │   └── IntegrationsPage.tsx           # Funding sources management page
-    │   └── utils/
-    ├── public/             # Static files
-    └── package.json        # Node.js dependencies
-```
-
-## Development Guide
-
-### Component Guidelines
-
-#### Virtual Cards
-- Use `AgentCardCreationForm` for creating new cards
-- Implement agent-specific validation rules
-- Follow responsive design patterns for all screen sizes
-- Use the provided agent type constants
-
-#### Agent Integration
-- Extend agent types in `agents/types.ts`
-- Add new agent workflows in `agents/workflows/`
-- Update validation rules in `agents/validation/`
-
-### Available Scripts
-
-#### Backend
-```bash
-# Run tests
-pytest
-
-# Check code style
-black .
-
-# Check imports
-isort .
-```
-
-#### Frontend
-```bash
-# Run tests
-npm test
-
-# Run linter
-npm run lint
-
-# Format code
-npm run format
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Backend won't start**
-   - Check if port 8000 is already in use
-   - Verify Python version (3.11+)
-   - Make sure all dependencies are installed
-   - Check .env configuration
-
-2. **Frontend won't start**
-   - Check if port 5173 is already in use
-   - Verify Node.js version (18+)
-   - Clear npm cache: `npm cache clean --force`
-   - Delete node_modules and reinstall: `rm -rf node_modules && npm install`
-
-3. **Can't log in**
-   - Verify backend is running
-   - Check browser console for errors
-   - Clear browser cache and cookies
-
-### Getting Help
-
-If you encounter any issues:
-1. Check the troubleshooting guide above
-2. Look for error messages in the terminal
-3. Check the browser console (F12) for frontend errors
-4. Review the backend logs
-
-## License
-
-MIT License - see LICENSE file for details
-npm run format
-```
-
-## Deployment
-
-The application is deployed using GitHub Actions to AWS ECS. See the `.github/workflows/deploy.yml` file for details.
-
-## Documentation
-
-- [API Documentation](docs/api/README.md)
-- [Frontend Documentation](docs/frontend/README.md)
-- [Testing Guide](docs/frontend/testing-guide.md)
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+# AI Agent Payment Platform
 
 A secure and scalable payment platform that enables AI agents to make authorized financial transactions using virtual cards.
 
-## Project Overview
+## Key Features
 
-This platform provides a robust infrastructure for managing virtual cards, processing transactions, and integrating with AI agents through OpenAI's platform.
+- **Virtual Card Management**: Create and manage virtual cards with configurable limits and restrictions
+- **OpenAI Integration**: Add payment capabilities to your existing OpenAI assistants
+- **LangChain Integration**: Build AI agents with payment capabilities using LangChain
+- **Transaction Controls**: Set spending limits, merchant restrictions, and approval workflows
+- **Real-time Monitoring**: Track transactions and analyze spending patterns
+- **Security Features**: Role-based access control, encryption, and comprehensive audit logging
 
-### Key Features
-
-- Virtual Card Management
-- Agent Authentication & Authorization
-- Transaction Controls & Monitoring
-- OpenAI Integration
-- Real-time Analytics Dashboard
-- Comprehensive Security Features
-
-## Technical Stack
-
-### Backend
-- Python 3.11+
-- FastAPI
-- PostgreSQL
-- Redis
-- Stripe API
-- OpenAI API
-
-### Frontend
-- React
-- TypeScript
-- Material-UI
-- Redux Toolkit
-
-### Infrastructure
-- AWS
-- Terraform
-- Docker
-- Kubernetes
-
-## Getting Started
+## Quick Start
 
 ### Prerequisites
-
 - Python 3.11+
 - Node.js 18+
-- Docker
-- AWS CLI
-- Terraform
+- PostgreSQL
+- Redis
 
-### Local Development Setup
+### Installation
 
 1. Clone the repository
 ```bash
@@ -303,27 +27,26 @@ git clone [repository-url]
 cd ai-agent-payment-platform
 ```
 
-2. Install backend dependencies
+2. Install dependencies
 ```bash
+# Backend
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: .\venv\Scripts\activate
 pip install -r requirements.txt
-```
 
-3. Install frontend dependencies
-```bash
+# Frontend
 cd frontend
 npm install
 ```
 
-4. Set up environment variables
+3. Configure environment variables
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-5. Start development servers
+4. Start development servers
 ```bash
 # Backend
 cd backend
@@ -334,86 +57,48 @@ cd frontend
 npm run dev
 ```
 
-## API Documentation
+## Adding Payment Capabilities to Your AI Assistant
 
-### Template Management API
+1. Create your assistant in the OpenAI dashboard
+2. Get your Assistant ID
+3. Add a virtual card through our platform:
+   - Set spending limits
+   - Configure merchant categories
+   - Enable transaction controls
+4. Start using the make_payment function in your assistant
 
-The Template Management API provides endpoints for creating and managing card templates. Templates define the rules and settings for virtual cards, enabling consistent card configuration and management.
-
-#### Endpoints
-
-##### Create Template
-```http
-POST /api/v1/templates
-```
-Create a new card template with spending limits, merchant restrictions, and control settings.
-
-##### Create Template Version
-```http
-POST /api/v1/templates/{template_id}/versions
-```
-Create a new version of an existing template while preserving history.
-
-##### Get Template History
-```http
-GET /api/v1/templates/{template_id}/history
-```
-Retrieve the complete version history of a template.
-
-##### Get Template Analytics
-```http
-GET /api/v1/templates/{template_id}/analytics
-```
-Get usage statistics and performance metrics for a template.
-
-Query Parameters:
-- `time_range`: Number of days to analyze (1-365, default: 30)
-
-##### Get Template
-```http
-GET /api/v1/templates/{template_id}
-```
-Retrieve full details of a specific template.
-
-##### List Templates
-```http
-GET /api/v1/templates
-```
-List templates with pagination and filtering.
-
-Query Parameters:
-- `skip`: Number of templates to skip (>= 0)
-- `limit`: Maximum templates to return (1-1000, default: 100)
-- `active_only`: Only show active versions (default: true)
-
-### Authentication
-
-All template endpoints require authentication. Include the JWT token in the Authorization header:
-```http
-Authorization: Bearer <token>
+Example usage:
+```python
+# Your assistant can now make payments
+make_payment({
+    "amount": amount,
+    "merchant": merchant_name,
+    "category": merchant_category,
+    "description": transaction_description
+})
 ```
 
-### Error Responses
+## Security Best Practices
 
-- `404 Not Found`: Template doesn't exist or belongs to another user
-- `403 Forbidden`: Insufficient permissions
-- `400 Bad Request`: Invalid request parameters
+- Set appropriate spending limits
+- Use merchant category restrictions
+- Enable transaction monitoring
+- Implement approval workflows for high-value transactions
+- Regularly review activity logs
 
-## Security
+## Documentation
 
-- OAuth 2.0 authentication
-- Role-based access control
-- API rate limiting
-- Encryption for sensitive data
-- Comprehensive audit logging
+- [API Documentation](docs/api/README.md)
+- [Frontend Documentation](docs/frontend/README.md)
+- [Security Guide](docs/security-guide.md)
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 

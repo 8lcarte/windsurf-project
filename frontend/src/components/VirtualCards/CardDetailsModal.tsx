@@ -25,9 +25,10 @@ import { AgentInfoPanel } from './AgentInfoPanel';
 import { VirtualCard, Transaction } from '../../api/virtualCards';
 import React, { useState } from 'react';
 import { useSnackbar } from 'notistack';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { virtualCardsApi } from '../../api/virtualCards';
 import MerchantControls from './MerchantControls'; // Assuming MerchantControls is in the same directory
+import { agentsApi } from '../../api/agents';
 
 interface CardDetailsModalProps {
   card: VirtualCard | null;
@@ -42,20 +43,13 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
   const [newSpendLimit, setNewSpendLimit] = useState<number | undefined>(card?.spendLimit);
   const [isFrozen, setIsFrozen] = useState(card?.frozen || false);
   const [editedCustomerId, setEditedCustomerId] = useState(card?.customerId || '');
-  const AVAILABLE_AGENTS = [
-    {
-      id: 'aws_cost_manager',
-      name: 'AWS Cost Manager',
-      icon: ProcurementIcon,
-      description: 'For managing AWS infrastructure costs and service payments',
-    },
-    {
-      id: 'saas_subscription_manager',
-      name: 'SaaS Subscription Manager',
-      icon: SubscriptionIcon,
-      description: 'For managing recurring software and service payments',
-    }
-  ];
+  
+  // Fetch agents from API
+  const { data: agents = [] } = useQuery({
+    queryKey: ['agents'],
+    queryFn: agentsApi.getAgents,
+    select: (data) => data.filter(agent => agent.status === 'active'), // Only show active agents
+  });
 
   const [editedAgentName, setEditedAgentName] = useState<string>(card?.metadata?.agent_name || '');
 
@@ -129,7 +123,7 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
     if (!card) return;
 
     try {
-      const selectedAgent = AVAILABLE_AGENTS.find(a => a.name === editedAgentName);
+      const selectedAgent = agents.find(a => a.name === editedAgentName);
       if (!selectedAgent) {
         enqueueSnackbar('Invalid agent name selected', { variant: 'error' });
         return;
@@ -141,7 +135,7 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
         metadata: {
           ...card.metadata,
           agent_name: editedAgentName,
-          agent_description: selectedAgent.description
+          agent_type: selectedAgent.type
         }
       });
       queryClient.invalidateQueries({ queryKey: ['virtualCards'] });
@@ -210,16 +204,18 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
                 onChange={(e: SelectChangeEvent<string>) => setEditedAgentName(e.target.value)}
                 label="Agent Name"
               >
-                {AVAILABLE_AGENTS.map((agent) => (
-                  <MenuItem key={agent.name} value={agent.name}>
+                {agents.map((agent) => (
+                  <MenuItem key={agent.id} value={agent.name}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <agent.icon fontSize="small" />
+                      <AgentIcon fontSize="small" />
                       <Typography>{agent.name}</Typography>
                     </Box>
                   </MenuItem>
                 ))}
               </Select>
-              <FormHelperText>{AVAILABLE_AGENTS.find(a => a.name === editedAgentName)?.description}</FormHelperText>
+              <FormHelperText>
+                {agents.find(a => a.name === editedAgentName)?.type}
+              </FormHelperText>
             </FormControl>
             <Button
               variant="contained"
