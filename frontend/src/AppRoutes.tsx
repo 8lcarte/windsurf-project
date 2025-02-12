@@ -23,6 +23,9 @@ export function AppRoutes() {
         <Route path="auth/callback" element={<OAuthCallbackPage />} />
         <Route path="dashboard" element={<ProtectedRoute><DashboardLayout><DashboardPage /></DashboardLayout></ProtectedRoute>} />
         <Route path="virtual-cards" element={<ProtectedRoute><DashboardLayout><VirtualCardsPage /></DashboardLayout></ProtectedRoute>} />
+        <Route path="virtual-cards/create" element={<ProtectedRoute><DashboardLayout><VirtualCardsPage mode="create" /></DashboardLayout></ProtectedRoute>} />
+        <Route path="virtual-cards/templates" element={<ProtectedRoute><DashboardLayout><VirtualCardsPage mode="templates" /></DashboardLayout></ProtectedRoute>} />
+        <Route path="virtual-cards/settings" element={<ProtectedRoute><DashboardLayout><VirtualCardsPage mode="settings" /></DashboardLayout></ProtectedRoute>} />
         <Route path="analytics" element={<ProtectedRoute><DashboardLayout><AnalyticsPage /></DashboardLayout></ProtectedRoute>} />
         <Route path="integrations" element={<ProtectedRoute><DashboardLayout><IntegrationsPage /></DashboardLayout></ProtectedRoute>} />
         <Route path="integrations/:integrationId" element={<ProtectedRoute><DashboardLayout><IntegrationDetailPage /></DashboardLayout></ProtectedRoute>} />

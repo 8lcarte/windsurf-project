@@ -3,6 +3,7 @@ import { api } from './api';
 export interface VirtualCard {
   id: string;
   userId: string;
+  customerId: string;
   name: string;
   number: string;
   lastFour: string;
@@ -17,6 +18,15 @@ export interface VirtualCard {
     allowedCategories: string[];
     blockedCategories: string[];
     maxAmountPerMerchant?: Record<string, number>;
+  };
+  metadata?: {
+    agent_name?: string;
+    agent_description?: string;
+    department?: string;
+    billing_cycle?: string;
+    trip_id?: string;
+    po_number?: string;
+    [key: string]: any;
   };
   createdAt: string;
 }
@@ -33,13 +43,22 @@ export interface Transaction {
 export interface CreateCardData {
   name: string;
   spendLimit: number;
+  customerId: string;
+  agentName: string;
   merchantCategories?: string[];
+  metadata?: Record<string, any>;
+}
+
+export interface UpdateCardAssociationData {
+  customerId?: string;
+  agentName?: string;
+  metadata?: Record<string, any>;
 }
 
 export const virtualCardsApi = {
   getCards: async () => {
     const response = await api.get<VirtualCard[]>('/virtual-cards');
-    return response;
+    return response.data;
   },
 
   createCard: (data: CreateCardData) =>
@@ -63,4 +82,7 @@ export const virtualCardsApi = {
     maxAmountPerMerchant?: Record<string, number>;
   }) =>
     api.patch<VirtualCard>(`/virtual-cards/${id}/merchant-controls`, data),
+
+  updateCardAssociation: (id: string, data: UpdateCardAssociationData) =>
+    api.patch<VirtualCard>(`/virtual-cards/${id}/association`, data),
 };

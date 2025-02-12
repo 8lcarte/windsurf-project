@@ -70,7 +70,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', position: 'relative', minHeight: '100vh' }}>
       <AppBar
         position="fixed"
         sx={{
@@ -91,7 +91,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           }),
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: 48 }}>
           <IconButton
             color="inherit"
             edge="start"
@@ -202,12 +202,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Box
         component="main"
         sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          position: 'absolute',
+          top: 48,  // Reduced from 64
+          right: 0,
+          bottom: 0,
+          left: open ? 240 : 64,
+          p: 1,    // Reduced from 2
+          overflow: 'auto',
+          transition: theme => theme.transitions.create('left', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
         }}
       >
-        <Toolbar />
+
         {children}
       </Box>
     </Box>

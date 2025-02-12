@@ -13,12 +13,19 @@ import {
   TextField,
   Button,
   Switch,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+  SelectChangeEvent,
 } from '@mui/material';
-import { Close as CloseIcon, SmartToy as AgentIcon } from '@mui/icons-material';
+import { Close as CloseIcon, SmartToy as AgentIcon, Flight as FlightIcon, ShoppingCart as ShoppingIcon, Business as ProcurementIcon, Subscriptions as SubscriptionIcon } from '@mui/icons-material';
 import { AgentInfoPanel } from './AgentInfoPanel';
 import { VirtualCard, Transaction } from '../../api/virtualCards';
 import React, { useState } from 'react';
 import { useSnackbar } from 'notistack';
+import { useQueryClient } from '@tanstack/react-query';
 import { virtualCardsApi } from '../../api/virtualCards';
 import MerchantControls from './MerchantControls'; // Assuming MerchantControls is in the same directory
 
@@ -31,8 +38,26 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
   if (!card) return null;
 
   const { enqueueSnackbar } = useSnackbar();
+  const queryClient = useQueryClient();
   const [newSpendLimit, setNewSpendLimit] = useState<number | undefined>(card?.spendLimit);
   const [isFrozen, setIsFrozen] = useState(card?.frozen || false);
+  const [editedCustomerId, setEditedCustomerId] = useState(card?.customerId || '');
+  const AVAILABLE_AGENTS = [
+    {
+      id: 'aws_cost_manager',
+      name: 'AWS Cost Manager',
+      icon: ProcurementIcon,
+      description: 'For managing AWS infrastructure costs and service payments',
+    },
+    {
+      id: 'saas_subscription_manager',
+      name: 'SaaS Subscription Manager',
+      icon: SubscriptionIcon,
+      description: 'For managing recurring software and service payments',
+    }
+  ];
+
+  const [editedAgentName, setEditedAgentName] = useState<string>(card?.metadata?.agent_name || '');
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -78,16 +103,15 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
 
   const handleFreezeToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newFrozenStatus = event.target.checked;
-    setIsFrozen(newFrozenStatus);
-
     if (!card) return;
 
     try {
       await virtualCardsApi.updateStatus(card.id, newFrozenStatus);
+      setIsFrozen(newFrozenStatus);
+      queryClient.invalidateQueries({ queryKey: ['virtualCards'] });
       enqueueSnackbar(`Card ${newFrozenStatus ? 'frozen' : 'unfrozen'} successfully`, { variant: 'success' });
     } catch (error: any) {
       enqueueSnackbar(error?.response?.data?.message || 'Failed to update card status', { variant: 'error' });
-      setIsFrozen(card.frozen);
     }
   };
 
@@ -100,6 +124,33 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
   const [merchantLimits, setMerchantLimits] = useState(
     card?.merchantControls?.maxAmountPerMerchant || {}
   );
+
+  const handleUpdateAssociation = async () => {
+    if (!card) return;
+
+    try {
+      const selectedAgent = AVAILABLE_AGENTS.find(a => a.name === editedAgentName);
+      if (!selectedAgent) {
+        enqueueSnackbar('Invalid agent name selected', { variant: 'error' });
+        return;
+      }
+
+      await virtualCardsApi.updateCardAssociation(card.id, {
+        customerId: editedCustomerId,
+        agentName: editedAgentName,
+        metadata: {
+          ...card.metadata,
+          agent_name: editedAgentName,
+          agent_description: selectedAgent.description
+        }
+      });
+      queryClient.invalidateQueries({ queryKey: ['virtualCards'] });
+      enqueueSnackbar('Card association updated successfully', { variant: 'success' });
+      onClose();
+    } catch (error: any) {
+      enqueueSnackbar(error?.response?.data?.message || 'Failed to update card association', { variant: 'error' });
+    }
+  };
 
   const handleUpdateMerchantControls = async (
     allowed: string[],
@@ -128,7 +179,7 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center">
-            {card.metadata?.agent_type && (
+            {card.metadata?.agent_name && (
               <AgentIcon sx={{ mr: 1, color: 'primary.main' }} />
             )}
             <Typography variant="h6">{card.name}</Typography>
@@ -141,6 +192,44 @@ export function CardDetailsModal({ card, onClose }: CardDetailsModalProps) {
       <DialogContent>
         <AgentInfoPanel metadata={card.metadata} />
         <Box sx={{ mb: 4 }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Card Association
+          </Typography>
+          <Box display="grid" gridTemplateColumns="1fr" gap={2} sx={{ mb: 3 }}>
+            <TextField
+              label="Customer ID"
+              value={editedCustomerId}
+              onChange={(e) => setEditedCustomerId(e.target.value)}
+              fullWidth
+              size="small"
+            />
+            <FormControl fullWidth size="small">
+              <InputLabel>Agent Name</InputLabel>
+              <Select
+                value={editedAgentName}
+                onChange={(e: SelectChangeEvent<string>) => setEditedAgentName(e.target.value)}
+                label="Agent Name"
+              >
+                {AVAILABLE_AGENTS.map((agent) => (
+                  <MenuItem key={agent.name} value={agent.name}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <agent.icon fontSize="small" />
+                      <Typography>{agent.name}</Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>{AVAILABLE_AGENTS.find(a => a.name === editedAgentName)?.description}</FormHelperText>
+            </FormControl>
+            <Button
+              variant="contained"
+              onClick={handleUpdateAssociation}
+              disabled={!editedCustomerId || !editedAgentName}
+            >
+              Update Association
+            </Button>
+          </Box>
+
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
             Card Details
           </Typography>

@@ -1,130 +1,132 @@
 import { http, HttpResponse } from 'msw';
-import {
-  mockTemplates,
-  mockTemplateHistory,
-  mockTemplateAnalytics,
-  mockApiErrors
-} from './templates';
+import { mockFundingSources } from './data/fundingSources';
 
-const API_BASE = '/api/v1';
+// Mock auth token check
+const isAuthenticated = (req: any) => {
+  const authHeader = req.headers.get('Authorization');
+  return authHeader && authHeader.startsWith('Bearer ');
+};
+
+// Mock error response
+const unauthorizedResponse = (ctx: any) => {
+  return ctx.status(401);
+};
+
+// Mock notifications
+const mockNotifications = [];
+
+
+// Keep track of connection state
+const connectedSources = new Set(['paypal-1', 'venmo-1']);
 
 export const handlers = [
-  // List templates
-  http.get(`${API_BASE}/templates`, ({ request }) => {
-    const url = new URL(request.url);
-    const skip = Number(url.searchParams.get('skip')) || 0;
-    const limit = Number(url.searchParams.get('limit')) || 10;
-    const activeOnly = url.searchParams.get('active_only') === 'true';
-
-    let templates = [...mockTemplates];
-    if (activeOnly) {
-      templates = templates.filter(t => t.isActive);
-    }
-
-    return HttpResponse.json(
-      templates.slice(skip, skip + limit),
-      { status: 200 }
+  // Get notifications
+  http.get('*/api/v1/notifications', (req, res, ctx) => {
+    if (!isAuthenticated(req)) return res(unauthorizedResponse(ctx));
+    return res(
+      ctx.delay(100),
+      ctx.status(200),
+      ctx.json(mockNotifications)
     );
   }),
 
-  // Get single template
-  http.get(`${API_BASE}/templates/:templateId`, ({ params }) => {
-    const { templateId } = params;
-    const template = mockTemplates.find(t => t.id === Number(templateId));
-
-    if (!template) {
-      return HttpResponse.json(
-        mockApiErrors.notFound,
-        { status: 404 }
-      );
-    }
-
-    return HttpResponse.json(template, { status: 200 });
-  }),
-
-  // Get template history
-  http.get(`${API_BASE}/templates/:templateId/history`, ({ params }) => {
-    const { templateId } = params;
+  // Get funding sources
+  http.get('*/api/v1/funding/sources', (req, res, ctx) => {
+    if (!isAuthenticated(req)) return res(unauthorizedResponse(ctx));
+    const sources = mockFundingSources.map(source => ({
+      ...source,
+      connected: connectedSources.has(source.id)
+    }));
     
-    // Simulate not found error for specific ID
-    if (templateId === '999') {
-      return HttpResponse.json(
-        mockApiErrors.notFound,
-        { status: 404 }
-      );
-    }
-
-    return HttpResponse.json(mockTemplateHistory, { status: 200 });
+    return res(
+      ctx.delay(500),
+      ctx.status(200),
+      ctx.json(sources)
+    );
   }),
 
-  // Get template analytics
-  http.get(`${API_BASE}/templates/:templateId/analytics`, ({ params }) => {
-    const { templateId } = params;
+  // Connect funding source
+  http.post('*/api/v1/funding/connect/:provider', (req, res, ctx) => {
+    if (!isAuthenticated(req)) return res(unauthorizedResponse(ctx));
+    const { provider } = req.params;
+    const source = mockFundingSources.find(s => s.provider === provider);
     
-    // Simulate unauthorized error for specific ID
-    if (templateId === '888') {
-      return HttpResponse.json(
-        mockApiErrors.unauthorized,
-        { status: 403 }
+    if (!source) {
+      return res(
+        ctx.status(404),
+        ctx.json({ error: 'Provider not found' })
       );
     }
 
-    return HttpResponse.json(mockTemplateAnalytics, { status: 200 });
-  }),
-
-  // Create template
-  http.post(`${API_BASE}/templates`, async ({ request }) => {
-    const body = await request.json();
+    // Add to connected sources
+    connectedSources.add(source.id);
     
-    // Simulate validation error for specific case
-    if (!body.name) {
-      return HttpResponse.json(
-        mockApiErrors.validation,
-        { status: 400 }
-      );
-    }
-
-    // Simulate rate limiting
-    if (body.name === 'rate-limit-test') {
-      return new HttpResponse(
-        JSON.stringify(mockApiErrors.rateLimited),
-        {
-          status: 429,
-          headers: {
-            'Retry-After': '60',
-          },
-        }
-      );
-    }
-
-    return HttpResponse.json({
-      ...mockTemplates[0],
-      ...body,
-      id: Math.floor(Math.random() * 1000) + 100,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }, { status: 201 });
+    return res(
+      ctx.delay(200),
+      ctx.status(200),
+      ctx.json({
+        url: `http://localhost:5173/mock-oauth/${provider}`,
+        state: 'mock-state-token'
+      })
+    );
   }),
 
-  // Create template version
-  http.post(`${API_BASE}/templates/:templateId/versions`, async ({ request, params }) => {
-    const { templateId } = params;
-    const body = await request.json();
+  // Disconnect funding source
+  http.post('*/api/v1/funding/disconnect/:sourceId', (req, res, ctx) => {
+    if (!isAuthenticated(req)) return res(unauthorizedResponse(ctx));
+    const { sourceId } = req.params;
+    connectedSources.delete(sourceId);
+    
+    return res(
+      ctx.delay(200),
+      ctx.status(200),
+      ctx.json({ success: true })
+    );
+  }),
 
-    // Simulate not found error for specific ID
-    if (templateId === '999') {
-      return HttpResponse.json(
-        mockApiErrors.notFound,
-        { status: 404 }
+  // Get funding source balance
+  http.get('*/api/v1/funding/:provider/:integrationId/balance', (req, res, ctx) => {
+    if (!isAuthenticated(req)) return res(unauthorizedResponse(ctx));
+    const { provider } = req.params;
+    const source = mockFundingSources.find(s => s.provider === provider);
+    
+    if (!source?.connected) {
+      return res(
+        ctx.status(404),
+        ctx.json({ error: 'Funding source not connected' })
       );
     }
 
-    return HttpResponse.json({
-      ...mockTemplates[0],
-      ...body,
-      id: Number(templateId),
-      version: mockTemplates[0].version + 1,
-      updatedAt: new Date().toISOString()
-    }, { status: 201 });
-  })
+    return res(
+      ctx.delay(300),
+      ctx.status(200),
+      ctx.json({
+        balance: source.balance,
+        currency: 'USD',
+        lastUpdated: new Date().toISOString()
+      })
+    );
+  }),
+
+  // Mock OAuth callback
+  rest.get('*/mock-oauth/:provider', (req, res, ctx) => {
+    const { provider } = req.params;
+    const source = mockFundingSources.find(s => s.provider === provider);
+    
+    if (!source) {
+      return res(
+        ctx.status(404),
+        ctx.json({ error: 'Provider not found' })
+      );
+    }
+
+    // Update the source to connected state
+    source.connected = true;
+    
+    return res(
+      ctx.delay(500),
+      ctx.status(200),
+      ctx.json({ success: true })
+    );
+  }),
 ];

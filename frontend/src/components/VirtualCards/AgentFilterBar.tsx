@@ -12,45 +12,42 @@ import {
 import { SmartToy as AgentIcon } from '@mui/icons-material';
 
 interface AgentFilterBarProps {
-  selectedAgentType: string;
-  onAgentTypeChange: (type: string) => void;
-  agentTypes: string[];
+  selectedAgentName: string;
+  onAgentNameChange: (name: string) => void;
+  agentNames: string[];
   cardCount: number;
 }
 
 export function AgentFilterBar({
-  selectedAgentType,
-  onAgentTypeChange,
-  agentTypes,
+  selectedAgentName,
+  onAgentNameChange,
+  agentNames,
   cardCount,
 }: AgentFilterBarProps) {
-  const formatAgentType = (type: string) => {
-    if (type === 'all') return 'All Agents';
-    return type
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+  const formatAgentName = (name: string) => {
+    if (name === 'all') return 'All Agents';
+    return name; // Agent names are already properly formatted by the developer
   };
 
   const handleChange = (event: SelectChangeEvent<string>) => {
-    onAgentTypeChange(event.target.value);
+    onAgentNameChange(event.target.value);
   };
 
   return (
     <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
       <FormControl size="small" sx={{ minWidth: 200 }}>
-        <InputLabel id="agent-type-label">Agent Type</InputLabel>
+        <InputLabel id="agent-name-label">Agent Name</InputLabel>
         <Select
-          labelId="agent-type-label"
-          value={selectedAgentType}
-          label="Agent Type"
+          labelId="agent-name-label"
+          value={selectedAgentName}
+          label="Agent Name"
           onChange={handleChange}
           startAdornment={<AgentIcon sx={{ ml: 1, mr: 1, color: 'action.active' }} />}
         >
           <MenuItem value="all">All Agents</MenuItem>
-          {agentTypes.map((type) => (
-            <MenuItem key={type} value={type}>
-              {formatAgentType(type)}
+          {agentNames.map((name) => (
+            <MenuItem key={name} value={name}>
+              {formatAgentName(name)}
             </MenuItem>
           ))}
         </Select>

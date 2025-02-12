@@ -22,7 +22,7 @@ import {
 export interface AgentCardFormData {
   name: string;
   spendLimit: number;
-  agent_type: string;
+  agentName: string;
   agent_instance_id?: string;
   end_user_id: string;
   metadata: Record<string, any>;
@@ -34,44 +34,23 @@ interface AgentCardCreationFormProps {
   errors?: Record<string, string>;
 }
 
-const AGENT_TYPES = [
+const AVAILABLE_AGENTS = [
   {
-    id: 'shopping_assistant',
-    name: 'Shopping Assistant',
-    icon: ShoppingIcon,
-    description: 'For personal shopping and e-commerce purchases',
-    defaultLimit: 1000,
-    metadata: {
-      allowed_categories: ['retail', 'electronics', 'general_merchandise'],
-      requires_verification: false
-    }
-  },
-  {
-    id: 'travel_agent',
-    name: 'Travel Agent',
-    icon: FlightIcon,
-    description: 'For booking flights, hotels, and travel expenses',
-    defaultLimit: 5000,
-    metadata: {
-      allowed_categories: ['airlines', 'hotels', 'car_rental'],
-      requires_verification: true
-    }
-  },
-  {
-    id: 'procurement_agent',
-    name: 'Procurement Agent',
+    id: 'aws_cost_manager',
+    name: 'AWS Cost Manager',
     icon: ProcurementIcon,
-    description: 'For business purchases and vendor payments',
+    description: 'For managing AWS infrastructure costs and service payments',
     defaultLimit: 10000,
     metadata: {
+      allowed_categories: ['CLOUD_SERVICES', 'SOFTWARE'],
+      department: 'Engineering',
       requires_approval: true,
-      approval_threshold: 5000,
-      department_tracking: true
+      approval_threshold: 5000
     }
   },
   {
-    id: 'subscription_manager',
-    name: 'Subscription Manager',
+    id: 'saas_subscription_manager',
+    name: 'SaaS Subscription Manager',
     icon: SubscriptionIcon,
     description: 'For managing recurring software and service payments',
     defaultLimit: 2000,
@@ -84,13 +63,13 @@ const AGENT_TYPES = [
 ];
 
 export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardCreationFormProps) {
-  const selectedAgent = AGENT_TYPES.find(agent => agent.id === formData.agent_type);
+  const selectedAgent = AVAILABLE_AGENTS.find(agent => agent.name === formData.agentName);
 
-  const handleAgentTypeChange = (type: string) => {
-    const agent = AGENT_TYPES.find(a => a.id === type);
+  const handleAgentNameChange = (name: string) => {
+    const agent = AVAILABLE_AGENTS.find(a => a.name === name);
     if (agent) {
       onChange({
-        agent_type: type,
+        agentName: name,
         spendLimit: agent.defaultLimit,
         metadata: agent.metadata
       });
@@ -101,45 +80,7 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
     if (!selectedAgent) return null;
 
     switch (selectedAgent.id) {
-      case 'shopping_assistant':
-        return (
-          <TextField
-            label="Items to Purchase"
-            fullWidth
-            multiline
-            rows={2}
-            value={formData.metadata.items_in_cart || ''}
-            onChange={(e) => onChange({
-              metadata: { ...formData.metadata, items_in_cart: e.target.value }
-            })}
-            placeholder="List items to be purchased"
-          />
-        );
-
-      case 'travel_agent':
-        return (
-          <>
-            <TextField
-              label="Trip ID"
-              fullWidth
-              value={formData.metadata.trip_id || ''}
-              onChange={(e) => onChange({
-                metadata: { ...formData.metadata, trip_id: e.target.value }
-              })}
-            />
-            <TextField
-              label="Travel Dates"
-              fullWidth
-              value={formData.metadata.travel_dates || ''}
-              onChange={(e) => onChange({
-                metadata: { ...formData.metadata, travel_dates: e.target.value }
-              })}
-              placeholder="e.g., Dec 10-15"
-            />
-          </>
-        );
-
-      case 'procurement_agent':
+      case 'aws_cost_manager':
         return (
           <>
             <TextField
@@ -149,19 +90,21 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
               onChange={(e) => onChange({
                 metadata: { ...formData.metadata, department: e.target.value }
               })}
+              placeholder="e.g., Engineering, DevOps"
             />
             <TextField
-              label="Purchase Order Number"
+              label="Project Code"
               fullWidth
-              value={formData.metadata.po_number || ''}
+              value={formData.metadata.project_code || ''}
               onChange={(e) => onChange({
-                metadata: { ...formData.metadata, po_number: e.target.value }
+                metadata: { ...formData.metadata, project_code: e.target.value }
               })}
+              placeholder="e.g., PROJ-123"
             />
           </>
         );
 
-      case 'subscription_manager':
+      case 'saas_subscription_manager':
         return (
           <>
             <TextField
@@ -171,16 +114,21 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
               onChange={(e) => onChange({
                 metadata: { ...formData.metadata, service_name: e.target.value }
               })}
+              placeholder="e.g., Jira, Confluence"
             />
             <TextField
-              label="Number of Licenses"
-              type="number"
+              label="Billing Cycle"
+              select
               fullWidth
-              value={formData.metadata.license_count || ''}
+              value={formData.metadata.billing_cycle || 'monthly'}
               onChange={(e) => onChange({
-                metadata: { ...formData.metadata, license_count: Number(e.target.value) }
+                metadata: { ...formData.metadata, billing_cycle: e.target.value }
               })}
-            />
+            >
+              <MenuItem value="monthly">Monthly</MenuItem>
+              <MenuItem value="quarterly">Quarterly</MenuItem>
+              <MenuItem value="annual">Annual</MenuItem>
+            </TextField>
           </>
         );
     }
@@ -188,11 +136,11 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <FormControl fullWidth error={!!errors?.agent_type}>
-        <InputLabel>Agent Type</InputLabel>
+      <FormControl fullWidth error={!!errors?.agentName}>
+        <InputLabel>Agent Name</InputLabel>
         <Select
-          value={formData.agent_type}
-          onChange={(e) => handleAgentTypeChange(e.target.value)}
+          value={formData.agentName}
+          onChange={(e) => handleAgentNameChange(e.target.value)}
           startAdornment={
             selectedAgent && (
               <InputAdornment position="start">
@@ -201,8 +149,8 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
             )
           }
         >
-          {AGENT_TYPES.map((agent) => (
-            <MenuItem key={agent.id} value={agent.id}>
+          {AVAILABLE_AGENTS.map((agent) => (
+            <MenuItem key={agent.name} value={agent.name}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <agent.icon sx={{ mr: 1 }} />
                 {agent.name}
@@ -210,8 +158,8 @@ export function AgentCardCreationForm({ formData, onChange, errors }: AgentCardC
             </MenuItem>
           ))}
         </Select>
-        {errors?.agent_type && (
-          <FormHelperText>{errors.agent_type}</FormHelperText>
+        {errors?.agentName && (
+          <FormHelperText>{errors.agentName}</FormHelperText>
         )}
       </FormControl>
 

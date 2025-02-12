@@ -19,8 +19,11 @@ import {
 
 interface AgentMetadata {
   agent_type: string;
-  agent_instance_id: string;
-  end_user_id: string;
+  agent_name?: string;
+  agent_description?: string;
+  agent_instance_id?: string;
+  end_user_id?: string;
+  department?: string;
   [key: string]: any;
 }
 
@@ -29,7 +32,7 @@ interface AgentInfoPanelProps {
 }
 
 export function AgentInfoPanel({ metadata }: AgentInfoPanelProps) {
-  if (!metadata?.agent_type) {
+  if (!metadata?.agent_name) {
     return (
       <Paper sx={{ p: 2, mb: 2 }}>
         <Typography variant="body2" color="text.secondary">
@@ -39,14 +42,12 @@ export function AgentInfoPanel({ metadata }: AgentInfoPanelProps) {
     );
   }
 
-  const getAgentTypeColor = (type: string) => {
+  const getAgentNameColor = (name: string) => {
     const colors: { [key: string]: string } = {
-      shopping_assistant: 'primary',
-      travel_agent: 'secondary',
-      procurement_agent: 'success',
-      subscription_manager: 'info',
+      'AWS Cost Manager': 'success',
+      'SaaS Subscription Manager': 'info',
     };
-    return colors[type] || 'default';
+    return colors[name] || 'default';
   };
 
   const formatAgentType = (type: string) => {
@@ -57,17 +58,11 @@ export function AgentInfoPanel({ metadata }: AgentInfoPanelProps) {
   };
 
   const getAdditionalInfo = () => {
-    switch (metadata.agent_type) {
-      case 'shopping_assistant':
-        return metadata.items_in_cart ? 
-          `Items in cart: ${metadata.items_in_cart}` : null;
-      case 'travel_agent':
-        return metadata.trip_id ? 
-          `Trip ID: ${metadata.trip_id}` : null;
-      case 'procurement_agent':
+    switch (metadata.agent_name) {
+      case 'AWS Cost Manager':
         return metadata.department ? 
           `Department: ${metadata.department}` : null;
-      case 'subscription_manager':
+      case 'SaaS Subscription Manager':
         return metadata.billing_cycle ? 
           `Billing Cycle: ${metadata.billing_cycle}` : null;
       default:
@@ -83,32 +78,41 @@ export function AgentInfoPanel({ metadata }: AgentInfoPanelProps) {
         </Typography>
         <Chip
           icon={<AgentIcon />}
-          label={formatAgentType(metadata.agent_type)}
-          color={getAgentTypeColor(metadata.agent_type)}
+          label={metadata.agent_name}
+          color={getAgentNameColor(metadata.agent_name || '')}
           sx={{ mb: 1 }}
         />
+        {metadata.agent_description && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            {metadata.agent_description}
+          </Typography>
+        )}
       </Box>
       
       <List dense>
-        <ListItem>
-          <ListItemIcon>
-            <InstanceIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText
-            primary="Instance ID"
-            secondary={metadata.agent_instance_id}
-          />
-        </ListItem>
+        {metadata.agent_instance_id && (
+          <ListItem>
+            <ListItemIcon>
+              <InstanceIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Instance ID"
+              secondary={metadata.agent_instance_id}
+            />
+          </ListItem>
+        )}
         
-        <ListItem>
-          <ListItemIcon>
-            <UserIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText
-            primary="End User"
-            secondary={metadata.end_user_id}
-          />
-        </ListItem>
+        {metadata.end_user_id && (
+          <ListItem>
+            <ListItemIcon>
+              <UserIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="End User"
+              secondary={metadata.end_user_id}
+            />
+          </ListItem>
+        )}
         
         {getAdditionalInfo() && (
           <>

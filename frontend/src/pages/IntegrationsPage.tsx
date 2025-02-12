@@ -69,10 +69,13 @@ export const IntegrationsPage: React.FC = () => {
   const {
     fundingSources,
     isLoading,
+    isPolling,
+    error: globalError,
     connect,
     disconnect,
     isConnecting,
     isDisconnecting,
+    refetch,
   } = useFundingSource();
 
   const handleConnect = async (provider: string) => {
@@ -113,12 +116,12 @@ export const IntegrationsPage: React.FC = () => {
           Connect your preferred payment methods to fund your virtual cards.
         </Typography>
         <Grid container spacing={3}>
-          {isLoading ? (
-            <Grid item xs={12}>
-              <Typography>Loading funding sources...</Typography>
-            </Grid>
-          ) : fundingSources.map((source) => {
+          {fundingSources.map((source) => {
             const config = FUNDING_SOURCE_CONFIG[source.provider as keyof typeof FUNDING_SOURCE_CONFIG];
+            if (!config) {
+              console.warn(`No configuration found for provider: ${source.provider}`);
+              return null;
+            }
             return (
               <Grid item xs={12} md={6} lg={4} key={source.id}>
                 <FundingSourceCard
@@ -129,6 +132,10 @@ export const IntegrationsPage: React.FC = () => {
                   onConnect={() => handleConnect(source.provider)}
                   onDisconnect={() => handleDisconnect(source.id)}
                   disabled={isConnecting || isDisconnecting}
+                  isLoading={isLoading}
+                  isPolling={isPolling && source.provider === globalError?.provider}
+                  error={globalError?.provider === source.provider ? globalError : null}
+                  onRetry={refetch}
                 />
               </Grid>
             );

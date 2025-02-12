@@ -193,8 +193,8 @@ export function TransactionList() {
 
   return (
     <>
-      <Box sx={{ mb: 2 }}>
-        <Stack spacing={2}>
+      <Box sx={{ mb: 1 }}>
+        <Stack spacing={1}>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               size="small"
@@ -276,7 +276,7 @@ export function TransactionList() {
         </Stack>
       </Box>
 
-      <List sx={{ width: '100%', bgcolor: 'background.paper', maxHeight: 400, overflow: 'auto' }}>
+      <List sx={{ width: '100%', bgcolor: 'background.paper', maxHeight: 400, overflow: 'auto', mt: 1 }}>
       {filteredTransactions.map((transaction) => (
         <ListItem
           key={transaction.id}
@@ -305,13 +305,14 @@ export function TransactionList() {
             </Avatar>
           </ListItemAvatar>
           <ListItemText
+            component="div"
             primary={
               <Box component="div" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography component="div" variant="subtitle1">
+                <Typography component="span" variant="subtitle1">
                   {transaction.description}
                 </Typography>
                 <Typography
-                  component="div"
+                  component="span"
                   variant="subtitle1"
                   color={transaction.type === 'credit' ? 'success.main' : 'text.primary'}
                 >
@@ -321,15 +322,17 @@ export function TransactionList() {
             }
             secondary={
               <Box component="div" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                <Typography component="div" variant="body2" color="text.secondary">
+                <Typography component="span" variant="body2" color="text.secondary">
                   {formatDate(transaction.date)}
                 </Typography>
-                <Chip
-                  label={transaction.status}
-                  size="small"
-                  color={statusColors[transaction.status]}
-                  sx={{ height: 20 }}
-                />
+                <Box component="div">
+                  <Chip
+                    label={transaction.status}
+                    size="small"
+                    color={statusColors[transaction.status]}
+                    sx={{ height: 20 }}
+                  />
+                </Box>
               </Box>
             }
           />

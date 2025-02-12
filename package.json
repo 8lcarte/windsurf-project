@@ -47,5 +47,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
 }

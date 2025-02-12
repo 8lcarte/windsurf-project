@@ -18,6 +18,7 @@ import {
   ContentCopy as CopyIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
+  SmartToy as AgentIcon,
 } from '@mui/icons-material';
 import { CreateCardModal } from '../components/VirtualCards/CreateCardModal';
 import { CardDetailsModal } from '../components/VirtualCards/CardDetailsModal';
@@ -38,56 +39,55 @@ export function VirtualCardsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<VirtualCard | null>(null);
   const [showCardNumber, setShowCardNumber] = useState<{id: string, number: string, cvv: string} | null>(null);
-  const [selectedAgentType, setSelectedAgentType] = useState('all');
+  const [selectedAgentName, setSelectedAgentName] = useState('all');
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
 
   // Queries
-  const { data: cardsResponse, isLoading, error } = useQuery({
+  const { data: cards = [], isLoading, error } = useQuery({
     queryKey: ['virtualCards'],
-    queryFn: async () => {
-      const response = await virtualCardsApi.getCards();
-      return response.data || [];
-    },
+    queryFn: virtualCardsApi.getCards,
   });
 
-  const cards = Array.isArray(cardsResponse) ? cardsResponse : [];
+  // Removed redundant cards array conversion since we have a default value above
 
-  const agentTypes = useMemo(() => {
-    const types = new Set<string>();
+  const agentNames = useMemo(() => {
+    const names = new Set<string>();
     cards.forEach(card => {
-      if (card.metadata?.agent_type) {
-        types.add(card.metadata.agent_type);
+      if (card.metadata?.agent_name) {
+        names.add(card.metadata.agent_name);
       }
     });
-    return Array.from(types);
+    return Array.from(names);
   }, [cards]);
 
   const filteredCards = useMemo(() => {
-    if (selectedAgentType === 'all') return cards;
-    return cards.filter(card => card.metadata?.agent_type === selectedAgentType);
-  }, [cards, selectedAgentType]);
+    if (selectedAgentName === 'all') return cards;
+    return cards.filter(card => card.metadata?.agent_name === selectedAgentName);
+  }, [cards, selectedAgentName]);
 
   // Mutations
   const createCardMutation = useMutation({
-    mutationFn: async (cardData: { name: string; spendLimit: number; metadata?: any }) => {
-      // Add validation based on agent type
-      if (cardData.metadata?.agent_type === 'procurement_agent' && cardData.spendLimit > 10000) {
-        throw new Error('Procurement agent cards require approval for limits over $10,000');
+    mutationFn: async (cardData: { name: string; spendLimit: number; customerId: string; agentName: string; metadata?: Record<string, any> }) => {
+      // Add validation based on agent name
+      if (cardData.agentName === 'AWS Cost Manager' && cardData.spendLimit > 10000) {
+        throw new Error('AWS Cost Manager cards require approval for limits over $10,000');
       }
       
-      // Add default expiry based on agent type
+      // Add default expiry based on agent name
       const expiryDays = {
-        shopping_assistant: 7,  // Short expiry for shopping
-        travel_agent: 30,      // Longer for travel bookings
-        procurement_agent: 90,  // Extended for business procurement
-        subscription_manager: 365 // Annual for subscriptions
-      }[cardData.metadata?.agent_type] || 30;
+        'AWS Cost Manager': 90,      // Extended for AWS infrastructure
+        'SaaS Subscription Manager': 365 // Annual for subscriptions
+      }[cardData.agentName] || 30;
 
       return virtualCardsApi.createCard({
-        ...cardData,
+        name: cardData.name,
+        spendLimit: cardData.spendLimit,
+        customerId: cardData.customerId,
+        agentName: cardData.agentName,
         metadata: {
           ...cardData.metadata,
+          agent_name: cardData.agentName,
           created_at: new Date().toISOString(),
           expiry_days: expiryDays
         }
@@ -105,7 +105,7 @@ export function VirtualCardsPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, frozen }: { id: string; frozen: boolean }) =>
-      Promise.resolve({ id, frozen }),
+      virtualCardsApi.updateStatus(id, frozen),
     onSuccess: (_, { frozen }) => {
       queryClient.invalidateQueries({ queryKey: ['virtualCards'] });
       enqueueSnackbar(
@@ -135,7 +135,15 @@ export function VirtualCardsPage() {
     return <LoadingSpinner />;
   }
 
-  if (!cards) return null;
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography color="error">
+          Error loading virtual cards: {error instanceof Error ? error.message : 'Unknown error'}
+        </Typography>
+      </Box>
+    );
+  }
 
 
   const formatCurrency = (amount: number) => {
@@ -145,7 +153,7 @@ export function VirtualCardsPage() {
     }).format(amount);
   };
 
-  const handleCreateCard = (cardData: { name: string; spendLimit: number }) => {
+  const handleCreateCard = (cardData: { name: string; spendLimit: number; customerId: string; agentType: string; metadata?: Record<string, any> }) => {
     createCardMutation.mutate(cardData);
   };
 
@@ -182,9 +190,9 @@ export function VirtualCardsPage() {
       </Box>
 
       <AgentFilterBar
-        selectedAgentType={selectedAgentType}
-        onAgentTypeChange={setSelectedAgentType}
-        agentTypes={agentTypes}
+        selectedAgentName={selectedAgentName}
+        onAgentNameChange={setSelectedAgentName}
+        agentNames={agentNames}
         cardCount={filteredCards.length}
       />
 
@@ -249,16 +257,18 @@ export function VirtualCardsPage() {
                     >
                       {card.name}
                     </Typography>
-                    <Tooltip title={card.frozen ? 'Card is frozen' : 'Card is active'}>
-                      <Box component="span">
-                        <Chip
-                          label={card.status}
-                          color={statusColors[card.status]}
-                          size="small"
-                          sx={{ fontWeight: 500 }}
-                        />
-                      </Box>
-                    </Tooltip>
+                    <Box display="flex" gap={1}>
+                      <Tooltip title={card.frozen ? 'Card is frozen' : 'Card is active'}>
+                        <Box component="span">
+                          <Chip
+                            label={card.frozen ? 'Frozen' : card.status}
+                            color={card.frozen ? 'error' : statusColors[card.status]}
+                            size="small"
+                            sx={{ fontWeight: 500 }}
+                          />
+                        </Box>
+                      </Tooltip>
+                    </Box>
                   </Box>
                   {card.metadata?.agent_type && (
                     <Box 
@@ -303,10 +313,15 @@ export function VirtualCardsPage() {
                     '& .detail-value': {
                       fontSize: { xs: '0.875rem', sm: '0.9375rem' },
                       fontWeight: 500,
-                      lineHeight: 1.5
+                      lineHeight: 1.5,
+                      wordBreak: 'break-all'
                     }
                   }}
                 >
+                  <Box>
+                    <Typography className="detail-label">Customer ID</Typography>
+                    <Typography className="detail-value">{card.customerId}</Typography>
+                  </Box>
                   {/* Card Number */}
                   <Box>
                     <Typography className="detail-label">Card Number</Typography>

@@ -15,20 +15,20 @@ import { SmartToy as AgentIcon } from '@mui/icons-material';
 interface CreateCardModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (cardData: CardFormData) => void;
-}
-
-interface CreateCardModalProps {
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (cardData: AgentCardFormData) => void;
+  onSubmit: (cardData: {
+    name: string;
+    spendLimit: number;
+    customerId: string;
+    agentName: string;
+    metadata?: Record<string, any>;
+  }) => void;
 }
 
 export function CreateCardModal({ open, onClose, onSubmit }: CreateCardModalProps) {
   const [formData, setFormData] = useState<AgentCardFormData>({
     name: '',
     spendLimit: 0,
-    agent_type: '',
+    agentName: '',
     end_user_id: '',
     metadata: {}
   });
@@ -41,7 +41,7 @@ export function CreateCardModal({ open, onClose, onSubmit }: CreateCardModalProp
     // Validate form
     const newErrors: Record<string, string> = {};
     if (!formData.name) newErrors.name = 'Name is required';
-    if (!formData.agent_type) newErrors.agent_type = 'Agent type is required';
+    if (!formData.agentName) newErrors.agentName = 'Agent name is required';
     if (!formData.end_user_id) newErrors.end_user_id = 'End user ID is required';
     if (formData.spendLimit <= 0) newErrors.spendLimit = 'Spend limit must be greater than 0';
 
@@ -50,11 +50,20 @@ export function CreateCardModal({ open, onClose, onSubmit }: CreateCardModalProp
       return;
     }
 
-    onSubmit(formData);
+    // Transform form data to API format
+    const cardData = {
+      name: formData.name,
+      spendLimit: formData.spendLimit,
+      customerId: formData.end_user_id,
+      agentName: formData.agentName,
+      metadata: formData.metadata
+    };
+
+    onSubmit(cardData);
     setFormData({
       name: '',
       spendLimit: 0,
-      agent_type: '',
+      agentName: '',
       end_user_id: '',
       metadata: {}
     });

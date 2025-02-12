@@ -21,10 +21,10 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
   return (
     <Paper
       sx={{
-        p: 2,
+        p: 1.5,
         display: 'flex',
         flexDirection: 'column',
-        height: 140,
+        height: 120,
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -85,10 +85,10 @@ export function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" sx={{ mb: 1 }}>
         Welcome back!
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         {stats.map((stat) => (
           <Grid key={stat.title} item xs={12} sm={6} md={3}>
             <StatCard {...stat} />
@@ -96,10 +96,10 @@ export function DashboardPage() {
         ))}
       </Grid>
 
-      <Grid container spacing={3} sx={{ mt: 3 }}>
+      <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 2, height: 400 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Paper sx={{ p: 1, height: 400 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="h6">
                 Recent Transactions
               </Typography>

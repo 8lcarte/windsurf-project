@@ -1,4 +1,5 @@
 import { Button, Stack } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import {
   Add as AddIcon,
   CreditCard as CreditCardIcon,
@@ -6,36 +7,38 @@ import {
   Description as DescriptionIcon,
 } from '@mui/icons-material';
 
-const actions = [
+export function QuickActions() {
+  const navigate = useNavigate();
+
+  const actions = [
   {
     label: 'Create Virtual Card',
     icon: <AddIcon />,
     color: 'primary',
-    onClick: () => console.log('Create card clicked'),
+    onClick: () => navigate('/virtual-cards/create'),
   },
   {
     label: 'Manage Templates',
     icon: <DescriptionIcon />,
     color: 'secondary',
-    onClick: () => console.log('Manage templates clicked'),
+    onClick: () => navigate('/virtual-cards/templates'),
   },
   {
     label: 'Card Settings',
     icon: <SettingsIcon />,
     color: 'info',
-    onClick: () => console.log('Card settings clicked'),
+    onClick: () => navigate('/virtual-cards/settings'),
   },
   {
     label: 'View All Cards',
     icon: <CreditCardIcon />,
     color: 'success',
-    onClick: () => console.log('View all cards clicked'),
+    onClick: () => navigate('/virtual-cards'),
   },
 ] as const;
 
-export function QuickActions() {
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1}>
       {actions.map((action) => (
         <Button
           key={action.label}
@@ -46,8 +49,8 @@ export function QuickActions() {
           fullWidth
           sx={{
             justifyContent: 'flex-start',
-            px: 2,
-            py: 1,
+            px: 1.5,
+            py: 0.75,
             '& .MuiButton-startIcon': {
               mr: 2,
             },
