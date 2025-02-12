@@ -399,30 +399,6 @@ Authorization: Bearer <token>
 - `403 Forbidden`: Insufficient permissions
 - `400 Bad Request`: Invalid request parameters
 
-## Project Structure
-
-```
-.
-├── backend/                 # Backend service
-│   ├── app/
-│   │   ├── api/            # API endpoints
-│   │   ├── core/           # Core functionality
-│   │   ├── db/             # Database models
-│   │   └── services/       # External service integrations
-│   ├── tests/              # Test suite
-│   └── requirements.txt    # Python dependencies
-├── frontend/               # Frontend application
-│   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── services/       # API services
-│   │   └── store/         # State management
-│   └── package.json
-├── infrastructure/         # Infrastructure as code
-│   └── terraform/
-├── docs/                  # Documentation
-└── README.md
-```
-
 ## Security
 
 - OAuth 2.0 authentication
