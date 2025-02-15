@@ -66,33 +66,63 @@ interface ApiResponse<T> {
 
 export const virtualCardsApi = {
   getCards: async () => {
-    const response = await api.get<ApiResponse<VirtualCard[]>>('/virtual-cards');
-    return response.data.data;
+    try {
+      const response = await api.get<ApiResponse<VirtualCard[]>>('/api/v1/virtual-cards');
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Error fetching virtual cards:', error);
+      return [];
+    }
   },
 
   createCard: async (data: CreateCardData) => {
-    const response = await api.post<ApiResponse<VirtualCard>>('/virtual-cards', data);
-    return response.data.data;
+    try {
+      const response = await api.post<ApiResponse<VirtualCard>>('/api/v1/virtual-cards', data);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error creating virtual card:', error);
+      throw error;
+    }
   },
 
   getCard: async (id: string) => {
-    const response = await api.get<ApiResponse<VirtualCard>>(`/virtual-cards/${id}`);
-    return response.data.data;
+    try {
+      const response = await api.get<ApiResponse<VirtualCard>>(`/api/v1/virtual-cards/${id}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching virtual card:', error);
+      throw error;
+    }
   },
 
   getCardNumber: async (id: string) => {
-    const response = await api.post<ApiResponse<{ number: string; cvv: string }>>(`/virtual-cards/${id}/number`);
-    return response.data.data;
+    try {
+      const response = await api.post<ApiResponse<{ number: string; cvv: string }>>(`/api/v1/virtual-cards/${id}/number`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching card number:', error);
+      throw error;
+    }
   },
 
   updateStatus: async (id: string, frozen: boolean) => {
-    const response = await api.patch<ApiResponse<VirtualCard>>(`/virtual-cards/${id}/status`, { frozen });
-    return response.data.data;
+    try {
+      const response = await api.patch<ApiResponse<VirtualCard>>(`/api/v1/virtual-cards/${id}/status`, { frozen });
+      return response.data.data;
+    } catch (error) {
+      console.error('Error updating card status:', error);
+      throw error;
+    }
   },
 
   updateLimit: async (id: string, spendLimit: number) => {
-    const response = await api.patch<ApiResponse<VirtualCard>>(`/virtual-cards/${id}/limit`, { spendLimit });
-    return response.data.data;
+    try {
+      const response = await api.patch<ApiResponse<VirtualCard>>(`/api/v1/virtual-cards/${id}/limit`, { spendLimit });
+      return response.data.data;
+    } catch (error) {
+      console.error('Error updating spend limit:', error);
+      throw error;
+    }
   },
     
   updateMerchantControls: async (id: string, data: {
@@ -100,12 +130,22 @@ export const virtualCardsApi = {
     blockedCategories: string[];
     maxAmountPerMerchant?: Record<string, number>;
   }) => {
-    const response = await api.patch<ApiResponse<VirtualCard>>(`/virtual-cards/${id}/merchant-controls`, data);
-    return response.data.data;
+    try {
+      const response = await api.patch<ApiResponse<VirtualCard>>(`/api/v1/virtual-cards/${id}/merchant-controls`, data);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error updating merchant controls:', error);
+      throw error;
+    }
   },
 
   updateCardAssociation: async (id: string, data: UpdateCardAssociationData) => {
-    const response = await api.patch<ApiResponse<VirtualCard>>(`/virtual-cards/${id}/association`, data);
-    return response.data.data;
+    try {
+      const response = await api.patch<ApiResponse<VirtualCard>>(`/api/v1/virtual-cards/${id}/association`, data);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error updating card association:', error);
+      throw error;
+    }
   },
 };

@@ -37,7 +37,7 @@ async def register(user_in: UserCreate = Body(...)) -> Any:
     return {
         "success": True,
         "data": {
-            "token": f"mock_token_{user.email}",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzM5NDA2ODAzLCJleHAiOjE3Mzk0OTMyMDN9.-64vgGGPUVfVk8TpYaZ6-DYXTnerufHj3lm09vm_kw0",
             "user": {
                 "id": str(user.id),
                 "email": user.email,
@@ -60,7 +60,7 @@ async def login(*, email: str = Body(...), password: str = Body(...)) -> Any:
     return {
         "success": True,
         "data": {
-            "token": f"mock_token_{user.email}",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzM5NDA2ODAzLCJleHAiOjE3Mzk0OTMyMDN9.-64vgGGPUVfVk8TpYaZ6-DYXTnerufHj3lm09vm_kw0",
             "user": {
                 "id": str(user.id),
                 "email": user.email,

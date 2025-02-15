@@ -126,6 +126,31 @@ export const AgentDetail: React.FC = () => {
         <Alert 
           severity="error" 
           action={
+            <Button color="inherit" size="small" onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Error loading agent details: {error instanceof Error ? error.message : 'Unknown error'}
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (!agent) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="warning">Agent not found</Alert>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert 
+          severity="error" 
+          action={
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button color="inherit" size="small" onClick={() => refetch()}>
                 Retry
@@ -256,7 +281,7 @@ export const AgentDetail: React.FC = () => {
                   Recent Activity
                 </Typography>
                 <Timeline>
-                  {agent.recent_transactions.slice(0, 5).map((tx) => (
+                  {(agent.recent_transactions || []).slice(0, 5).map((tx) => (
                     <TimelineItem key={tx.id}>
                       <TimelineSeparator>
                         <TimelineDot color={tx.status === 'completed' ? 'success' : 'error'}>
@@ -284,7 +309,7 @@ export const AgentDetail: React.FC = () => {
       {/* Behavior Patterns Tab */}
       <TabPanel value={tabValue} index={1}>
         <Grid container spacing={3}>
-          {agent.behavioral_patterns.map((pattern, index) => (
+          {(agent.behavioral_patterns || []).map((pattern, index) => (
             <Grid item xs={12} md={6} key={index}>
               <Card>
                 <CardContent>
@@ -322,7 +347,7 @@ export const AgentDetail: React.FC = () => {
                   Risk Metrics
                 </Typography>
                 <Box sx={{ mt: 2 }}>
-                  {Object.entries(agent.risk_metrics).map(([metric, value]) => (
+                  {Object.entries(agent.risk_metrics || {}).map(([metric, value]) => (
                     <Box key={metric} sx={{ mb: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="body2">
@@ -352,7 +377,7 @@ export const AgentDetail: React.FC = () => {
                     Allowed Categories
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {agent.allowed_merchant_categories.map((category) => (
+                    {(agent.allowed_merchant_categories || []).map((category) => (
                       <Chip key={category} label={category} color="success" size="small" />
                     ))}
                   </Box>
@@ -362,7 +387,7 @@ export const AgentDetail: React.FC = () => {
                     Blocked Categories
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {agent.blocked_merchant_categories.map((category) => (
+                    {(agent.blocked_merchant_categories || []).map((category) => (
                       <Chip key={category} label={category} color="error" size="small" />
                     ))}
                   </Box>

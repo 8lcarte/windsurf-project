@@ -15,15 +15,20 @@ async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> Opt
     if not token:
         return None
         
-    if not token.startswith("mock_token_"):
+    try:
+        # Split the token into parts
+        parts = token.split('.')
+        if len(parts) != 3:
+            return None
+            
+        # For now, just return a mock user since we're mocking the auth
+        user = mock_users.get('test@example.com')
+        if not user:
+            return None
+            
+        return user
+    except Exception:
         return None
-        
-    email = token.replace("mock_token_", "")
-    user = mock_users.get(email)
-    if not user:
-        return None
-        
-    return user
 
 async def get_current_active_user(
     current_user: Optional[User] = Depends(get_current_user),

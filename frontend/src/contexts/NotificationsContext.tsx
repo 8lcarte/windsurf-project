@@ -38,31 +38,34 @@ export function NotificationsProvider({
     if (!isAuthenticated) return;
     
     try {
-      const response = await notificationsApi.getAll();
-      const newNotifications = response.data;
-      
-      // Show snackbar for new unread notifications
-      newNotifications.forEach(notification => {
-        if (!notification.read && !notifications.find(n => n.id === notification.id)) {
-          enqueueSnackbar(notification.message, {
-            variant: notification.type === 'budget_alert' ? 'warning' : 'info',
-            autoHideDuration: 6000,
-            action: (key) => (
-              <button
-                onClick={() => {
-                  markAsRead(notification.id);
-                  // @ts-ignore - notistack types are not up to date
-                  closeSnackbar(key);
-                }}
-              >
-                Dismiss
-              </button>
-            ),
-          });
-        }
-      });
-      
-      setNotifications(newNotifications);
+     const response = await notificationsApi.getAll();
+     const newNotifications = response.data || [];
+     
+     // Show snackbar for new unread notifications
+     if (Array.isArray(newNotifications)) {
+       newNotifications.forEach(notification => {
+         if (!notification.read && !notifications.find(n => n.id === notification.id)) {
+           enqueueSnackbar(notification.message, {
+             variant: notification.type === 'budget_alert' ? 'warning' : 'info',
+             autoHideDuration: 6000,
+             action: (key) => (
+               <button
+                 onClick={() => {
+                   markAsRead(notification.id);
+                   // @ts-ignore - notistack types are not up to date
+                   closeSnackbar(key);
+                 }}
+               >
+                 Dismiss
+               </button>
+             ),
+           });
+         }
+       });
+       setNotifications(newNotifications);
+     } else {
+       setNotifications([]);
+     }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }

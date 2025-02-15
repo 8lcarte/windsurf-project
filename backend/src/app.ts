@@ -11,6 +11,7 @@ import { rateLimiter } from './middleware/rateLimiter';
 import { authenticate } from './middleware/auth';
 import { router as authRoutes } from './routes/auth';
 import { router as virtualCardRoutes } from './routes/virtualCards';
+import { router as agentRoutes } from './routes/agents';
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/v1/funding', authenticate, fundingRoutes);
 app.use('/api/v1/funding/sources', authenticate, fundingSourcesRouter);
 app.use('/api/v1/email-templates', authenticate, emailTemplateRoutes);
 app.use('/api/v1/virtual-cards', authenticate, virtualCardRoutes);
+app.use('/api/v1/agents', authenticate, agentRoutes);
 
 // Error handling
 app.use(errorHandler);

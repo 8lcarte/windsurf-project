@@ -62,6 +62,9 @@ export const VirtualCardsPage: React.FC<VirtualCardsPageProps> = ({ mode }) => {
   const { data: cards = [], isLoading, error } = useQuery({
     queryKey: ['virtualCards'],
     queryFn: virtualCardsApi.getCards,
+    initialData: [],
+    staleTime: 5000, // Optional: prevents unnecessary refetches
+    select: (data) => data ?? [], // Ensures data is never undefined
   });
 
   const agentNames = useMemo(() => {

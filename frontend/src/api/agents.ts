@@ -61,43 +61,43 @@ interface ApiResponse<T> {
 
 export const agentsApi = {
   getAgents: async () => {
-    const response = await api.get<ApiResponse<Agent[]>>('/agents');
+    const response = await api.get<ApiResponse<Agent[]>>('/api/v1/agents');
     return response.data.data;
   },
 
   getAgent: async (id: number) => {
-    const response = await api.get<ApiResponse<Agent>>(`/agents/${id}`);
+    const response = await api.get<ApiResponse<Agent>>(`/api/v1/agents/${id}`);
     return response.data.data;
   },
 
   createAgent: async (data: CreateAgentData) => {
-    const response = await api.post<ApiResponse<Agent>>('/agents', data);
+    const response = await api.post<ApiResponse<Agent>>('/api/v1/agents', data);
     return response.data.data;
   },
 
   updateAgent: async (id: number, data: Partial<CreateAgentData>) => {
-    const response = await api.patch<ApiResponse<Agent>>(`/agents/${id}`, data);
+    const response = await api.patch<ApiResponse<Agent>>(`/api/v1/agents/${id}`, data);
     return response.data.data;
   },
 
   deleteAgent: async (id: number) => {
-    const response = await api.delete<ApiResponse<void>>(`/agents/${id}`);
+    const response = await api.delete<ApiResponse<void>>(`/api/v1/agents/${id}`);
     return response.data.success;
   },
 
   // Analytics endpoints
   getAgentSpending: async (id: number) => {
-    const response = await api.get<ApiResponse<any>>(`/agents/${id}/spending`);
+    const response = await api.get<ApiResponse<any>>(`/api/v1/agents/${id}/spending`);
     return response.data.data;
   },
 
   getAgentActivity: async (id: number) => {
-    const response = await api.get<ApiResponse<any>>(`/agents/${id}/activity`);
+    const response = await api.get<ApiResponse<any>>(`/api/v1/agents/${id}/activity`);
     return response.data.data;
   },
 
   getAgentRisk: async (id: number) => {
-    const response = await api.get<ApiResponse<any>>(`/agents/${id}/risk`);
+    const response = await api.get<ApiResponse<any>>(`/api/v1/agents/${id}/risk`);
     return response.data.data;
   },
 }; 

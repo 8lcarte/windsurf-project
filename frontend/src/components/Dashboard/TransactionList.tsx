@@ -18,6 +18,8 @@ import {
   MenuItem,
   Button,
   ListItemIcon,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   Info as InfoIcon,
@@ -31,24 +33,12 @@ import {
   Category as CategoryIcon,
 } from '@mui/icons-material';
 import { useState, useMemo, MouseEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { exportToCSV } from '../../utils/exportUtils';
 import { TransactionDetailModal } from './TransactionDetailModal';
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  status: 'completed' | 'pending' | 'failed';
-  type: 'debit' | 'credit';
-  cardId?: string;
-  merchantName?: string;
-  category?: string;
-  notes?: string;
-}
+import { Transaction, transactionsApi } from '../../api/transactions';
 
 type Filter = 'all' | 'completed' | 'pending' | 'failed';
-
 type SortField = 'date' | 'amount' | 'description';
 type SortOrder = 'asc' | 'desc';
 
@@ -57,61 +47,11 @@ interface SortConfig {
   order: SortOrder;
 }
 
-const mockTransactions: Transaction[] = [
-  {
-    id: '1',
-    date: '2025-02-09',
-    description: 'AWS Cloud Services',
-    amount: 245.50,
-    status: 'completed',
-    type: 'debit',
-    cardId: 'CARD-001',
-    merchantName: 'Amazon Web Services',
-    category: 'Cloud Infrastructure',
-    notes: 'Monthly cloud hosting charges',
-  },
-  {
-    id: '2',
-    date: '2025-02-09',
-    description: 'GitHub Enterprise',
-    amount: 84.00,
-    status: 'pending',
-    type: 'debit',
-    cardId: 'CARD-002',
-    merchantName: 'GitHub',
-    category: 'Development Tools',
-  },
-  {
-    id: '3',
-    date: '2025-02-08',
-    description: 'Refund - Azure Services',
-    amount: 150.00,
-    status: 'completed',
-    type: 'credit',
-    cardId: 'CARD-001',
-    merchantName: 'Microsoft Azure',
-    category: 'Cloud Infrastructure',
-    notes: 'Service credit for downtime',
-  },
-  {
-    id: '4',
-    date: '2025-02-08',
-    description: 'Digital Ocean',
-    amount: 40.00,
-    status: 'failed',
-    type: 'debit',
-    cardId: 'CARD-003',
-    merchantName: 'DigitalOcean',
-    category: 'Cloud Infrastructure',
-    notes: 'Payment failed - card expired',
-  },
-];
-
-const statusColors = {
+const statusColors: Record<Transaction['status'], 'success' | 'warning' | 'error'> = {
   completed: 'success',
   pending: 'warning',
   failed: 'error',
-} as const;
+};
 
 export function TransactionList() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -119,6 +59,11 @@ export function TransactionList() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'date', order: 'desc' });
   const [sortAnchorEl, setSortAnchorEl] = useState<null | HTMLElement>(null);
+
+  const { data: transactions = [], isLoading, error } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: transactionsApi.getAll,
+  });
 
   const handleSortClick = (event: MouseEvent<HTMLElement>) => {
     setSortAnchorEl(event.currentTarget);
@@ -148,8 +93,7 @@ export function TransactionList() {
   };
 
   const filteredTransactions = useMemo(() => {
-    // First filter
-    const filtered = mockTransactions.filter((transaction) => {
+    const filtered = transactions.filter((transaction: Transaction) => {
       const matchesSearch = transaction.description
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -158,7 +102,6 @@ export function TransactionList() {
       return matchesSearch && matchesStatus;
     });
 
-    // Then sort
     return [...filtered].sort((a, b) => {
       let comparison = 0;
       switch (sortConfig.field) {
@@ -174,7 +117,8 @@ export function TransactionList() {
       }
       return sortConfig.order === 'asc' ? -comparison : comparison;
     });
-  }, [searchQuery, statusFilter, sortConfig]);
+  }, [searchQuery, statusFilter, sortConfig, transactions]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -192,8 +136,8 @@ export function TransactionList() {
   };
 
   return (
-    <>
-      <Box sx={{ mb: 1 }}>
+    <Stack spacing={2}>
+      <Box>
         <Stack spacing={1}>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
@@ -238,6 +182,7 @@ export function TransactionList() {
               Description {sortConfig.field === 'description' && (sortConfig.order === 'asc' ? '↑' : '↓')}
             </MenuItem>
           </Menu>
+
           <TextField
             fullWidth
             size="small"
@@ -252,6 +197,7 @@ export function TransactionList() {
               ),
             }}
           />
+
           <ToggleButtonGroup
             value={statusFilter}
             exclusive
@@ -260,88 +206,92 @@ export function TransactionList() {
             size="small"
             fullWidth
           >
-            <ToggleButton value="all">
-              All
-            </ToggleButton>
-            <ToggleButton value="completed">
-              Completed
-            </ToggleButton>
-            <ToggleButton value="pending">
-              Pending
-            </ToggleButton>
-            <ToggleButton value="failed">
-              Failed
-            </ToggleButton>
+            <ToggleButton value="all">All</ToggleButton>
+            <ToggleButton value="completed">Completed</ToggleButton>
+            <ToggleButton value="pending">Pending</ToggleButton>
+            <ToggleButton value="failed">Failed</ToggleButton>
           </ToggleButtonGroup>
         </Stack>
       </Box>
 
-      <List sx={{ width: '100%', bgcolor: 'background.paper', maxHeight: 400, overflow: 'auto', mt: 1 }}>
-      {filteredTransactions.map((transaction) => (
-        <ListItem
-          key={transaction.id}
-          alignItems="flex-start"
-          secondaryAction={
-            <Tooltip title="View Details">
-              <IconButton edge="end" aria-label="details">
-                <InfoIcon />
-              </IconButton>
-            </Tooltip>
-          }
-          sx={{
-            '&:not(:last-child)': {
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-            },
-          }}
-        >
-          <ListItemAvatar>
-            <Avatar
+      {isLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Box sx={{ p: 3 }}>
+          <Alert severity="error">
+            Error loading transactions. Please try again later.
+          </Alert>
+        </Box>
+      ) : (
+        <List sx={{ width: '100%', bgcolor: 'background.paper', maxHeight: 400, overflow: 'auto' }}>
+          {filteredTransactions.map((transaction) => (
+            <ListItem
+              key={transaction.id}
+              alignItems="flex-start"
+              secondaryAction={
+                <Tooltip title="View Details">
+                  <IconButton
+                    edge="end"
+                    aria-label="details"
+                    onClick={() => setSelectedTransaction(transaction)}
+                  >
+                    <InfoIcon />
+                  </IconButton>
+                </Tooltip>
+              }
               sx={{
-                bgcolor: transaction.type === 'credit' ? 'success.light' : 'primary.light',
+                '&:not(:last-child)': {
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                },
               }}
             >
-              {transaction.type === 'credit' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
-            </Avatar>
-          </ListItemAvatar>
-          <ListItemText
-            primary={
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography component="span" variant="subtitle1">
-                  {transaction.description}
-                </Typography>
-                <Typography
-                  component="span"
-                  variant="subtitle1"
-                  color={transaction.type === 'credit' ? 'success.main' : 'text.primary'}
+              <ListItemAvatar>
+                <Avatar
+                  sx={{
+                    bgcolor: transaction.type === 'credit' ? 'success.light' : 'primary.light',
+                  }}
                 >
-                  {transaction.type === 'credit' ? '+' : '-'} {formatCurrency(transaction.amount)}
-                </Typography>
-              </Box>
-            }
-            secondary={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                <Typography component="span" variant="body2" color="text.secondary">
-                  {formatDate(transaction.date)}
-                </Typography>
-                <Chip
-                  label={transaction.status}
-                  size="small"
-                  color={statusColors[transaction.status]}
-                  sx={{ height: 20 }}
-                />
-              </Box>
-            }
-          />
-        </ListItem>
-      ))}
-    </List>
+                  {transaction.type === 'credit' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={
+                  <Typography component="div" variant="subtitle1">
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <span>{transaction.description}</span>
+                      <span style={{ color: transaction.type === 'credit' ? '#2e7d32' : 'inherit' }}>
+                        {transaction.type === 'credit' ? '+' : '-'} {formatCurrency(transaction.amount)}
+                      </span>
+                    </Stack>
+                  </Typography>
+                }
+                secondary={
+                  <Typography component="div" variant="body2">
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                      <span>{formatDate(transaction.date)}</span>
+                      <Chip
+                        label={transaction.status}
+                        size="small"
+                        color={statusColors[transaction.status]}
+                        sx={{ height: 20 }}
+                      />
+                    </Stack>
+                  </Typography>
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+      )}
 
       <TransactionDetailModal
         open={!!selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
         transaction={selectedTransaction}
       />
-    </>
+    </Stack>
   );
 }

@@ -25,6 +25,8 @@
     "@tanstack/react-query-devtools": "^5.20.1",
     "@types/swagger-ui-react": "^5.18.0",
     "axios": "^1.7.9",
+    "axios-cache-interceptor": "^1.6.2",
+    "axios-retry": "^4.5.0",
     "date-fns": "^3.6.0",
     "formik": "^2.4.5",
     "jwt-decode": "^4.0.0",

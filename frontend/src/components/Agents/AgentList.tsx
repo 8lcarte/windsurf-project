@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { TablePagination } from '@mui/material';
 import {
   Box,
   Card,
@@ -37,12 +38,9 @@ export const AgentList: React.FC = () => {
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [paginationModel, setPaginationModel] = useState({
-    pageSize: 10,
-    page: 0,
-  });
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Queries
   const { data: agents = [], isLoading, error } = useQuery({
     queryKey: ['agents'],
     queryFn: agentsApi.getAgents,
@@ -235,18 +233,23 @@ export const AgentList: React.FC = () => {
 
         <Box sx={{ height: 600, width: '100%' }}>
           <DataGrid
-            rows={agents}
+            rows={agents.slice(page * pageSize, (page + 1) * pageSize)}
             columns={columns}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[10, 25, 50]}
             disableRowSelectionOnClick
             loading={isLoading}
-            sx={{
-              '& .MuiDataGrid-cell:focus': {
-                outline: 'none',
-              },
+            hideFooter
+          />
+          <TablePagination
+            component="div"
+            count={agents.length}
+            page={page}
+            onPageChange={(event, newPage) => setPage(newPage)}
+            rowsPerPage={pageSize}
+            onRowsPerPageChange={(event) => {
+              setPageSize(parseInt(event.target.value, 10));
+              setPage(0);
             }}
+            rowsPerPageOptions={[10, 25, 50]}
           />
         </Box>
       </CardContent>
