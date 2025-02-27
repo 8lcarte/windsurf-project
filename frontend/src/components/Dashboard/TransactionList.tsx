@@ -93,10 +93,8 @@ export function TransactionList() {
   };
 
   const filteredTransactions = useMemo(() => {
-    const filtered = transactions.filter((transaction: Transaction) => {
-      const matchesSearch = transaction.description
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+    const filtered = transactions.filter((transaction) => {
+      const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus =
         statusFilter === 'all' || transaction.status === statusFilter;
       return matchesSearch && matchesStatus;
@@ -114,8 +112,10 @@ export function TransactionList() {
         case 'description':
           comparison = a.description.localeCompare(b.description);
           break;
+        default:
+          comparison = 0;
       }
-      return sortConfig.order === 'asc' ? -comparison : comparison;
+      return sortConfig.order === 'asc' ? comparison : -comparison;
     });
   }, [searchQuery, statusFilter, sortConfig, transactions]);
 

@@ -1,255 +1,328 @@
-# Agent Management Guide
+# AI Agent Management Guide
 
 ## Overview
-This guide explains how to effectively manage AI agents within the platform, including creation, configuration, monitoring, and optimization of agent behavior.
 
-## Getting Started
+This guide explains how to effectively manage AI agents in the platform, including creation, configuration, monitoring, and best practices.
 
-### Accessing Agent Dashboard
-1. Log into your account
-2. Navigate to "Agents" in the main menu
-3. View your active agents and their status
+## Creating an Agent
 
-### Creating a New Agent
+### Basic Setup
 
-1. Click "Create New Agent" button
-2. Select agent type:
-   - Transaction Validator
-   - Category Classifier
-   - Spending Analyzer
+1. Navigate to the Agents page
+2. Click "Create New Agent"
+3. Fill in the basic information:
+   - Name: A descriptive name for the agent
+   - Description: The agent's purpose and responsibilities
+   - Type: Select the agent type (shopping, travel, etc.)
 
-3. Configure basic settings:
-   ```
-   Name: [Agent name]
-   Description: [Agent purpose]
-   Active Hours: [Operating hours]
-   Alert Threshold: [Alert sensitivity]
-   ```
-
-4. Set permissions and access levels
-
-## Agent Types and Capabilities
-
-### Transaction Validator
-- Validates transactions in real-time
-- Applies spending policies
-- Flags suspicious activities
-- Recommends approval/denial
-
-Configuration options:
+Example:
 ```json
 {
-  "validation_rules": {
-    "max_amount": 5000,
-    "restricted_categories": ["gambling", "adult"],
-    "high_risk_merchants": ["list", "of", "merchants"]
-  },
-  "alert_settings": {
-    "threshold": 0.8,
-    "notification_channel": "email"
-  }
+  "name": "Shopping Assistant",
+  "description": "AI assistant for managing office supply purchases",
+  "type": "shopping"
 }
 ```
 
-### Category Classifier
-- Automatically categorizes transactions
-- Maintains merchant database
-- Updates spending analytics
-- Provides category insights
+### Spending Controls
 
-Configuration options:
+Configure spending limits and controls:
+
+1. Daily Spend Limit: Maximum amount per day
+2. Monthly Spend Limit: Maximum amount per month
+3. Transaction Limits:
+   - Maximum transaction amount
+   - Amount requiring approval
+   - Minimum transaction amount
+
+Example configuration:
 ```json
 {
-  "categories": {
-    "retail": ["shopping", "department stores"],
-    "dining": ["restaurants", "fast food"],
-    "travel": ["airlines", "hotels"]
-  },
-  "learning_mode": "active",
-  "confidence_threshold": 0.9
+  "daily_spend_limit": 1000.00,
+  "monthly_spend_limit": 5000.00,
+  "max_transaction_amount": 500.00,
+  "require_approval_above": 200.00,
+  "min_transaction_amount": 10.00
 }
 ```
 
-### Spending Analyzer
-- Analyzes spending patterns
-- Generates insights
-- Identifies saving opportunities
-- Provides budget recommendations
+### Merchant Controls
 
-Configuration options:
+Set up merchant restrictions:
+
+1. Allowed Merchants:
+   - Specific merchants the agent can transact with
+   - Leave empty to allow all non-blocked merchants
+
+2. Blocked Merchants:
+   - Specific merchants the agent cannot transact with
+   - High-priority restriction
+
+3. Merchant Categories:
+   - Allow or block entire categories
+   - Examples: retail, travel, food, entertainment
+
+Example:
 ```json
 {
-  "analysis_period": "monthly",
-  "comparison_basis": "previous_period",
-  "insight_types": [
-    "spending_trends",
-    "merchant_analysis",
-    "category_breakdown"
+  "allowed_merchants": [
+    "Amazon",
+    "Walmart",
+    "Office Depot"
+  ],
+  "blocked_merchants": [
+    "UnauthorizedStore"
+  ],
+  "allowed_merchant_categories": [
+    "retail",
+    "office_supplies"
+  ],
+  "blocked_merchant_categories": [
+    "gambling",
+    "entertainment"
   ]
 }
 ```
 
-## Monitoring and Management
+## Managing Agents
+
+### Agent Status
+
+Agents can have the following statuses:
+
+1. **Active**: Fully operational
+2. **Inactive**: Temporarily disabled
+3. **Suspended**: Blocked due to suspicious activity
+4. **Pending Approval**: Awaiting administrator review
+
+To change an agent's status:
+1. Go to the agent's detail page
+2. Click "Change Status"
+3. Select the new status
+4. Provide a reason for the change (required for suspension)
+
+### Transaction Approval
+
+For transactions requiring approval:
+
+1. You'll receive a notification
+2. Review the transaction details:
+   - Amount
+   - Merchant
+   - Purpose
+   - Risk assessment
+3. Approve or reject with comments
+4. Set approval preferences:
+   - Auto-approve below certain amount
+   - Auto-approve specific merchants
+   - Require multiple approvers
+
+## Monitoring
 
 ### Dashboard Overview
-The agent dashboard provides:
-- Active agent status
-- Performance metrics
-- Recent decisions
-- Alert history
 
-### Key Metrics
-1. Performance Metrics
-   - Decision accuracy
-   - Response time
-   - Processing volume
-   - Error rate
+The agent dashboard shows:
 
-2. Operational Metrics
-   - Uptime
-   - Resource usage
-   - Queue length
-   - Batch processing time
+1. Activity Metrics:
+   - Total transactions
+   - Success rate
+   - Average response time
+   - Current spending levels
 
-### Alert Management
-Configure alerts for:
-- High-risk transactions
-- Unusual patterns
-- System errors
-- Performance issues
+2. Risk Indicators:
+   - Risk score
+   - Unusual patterns
+   - Velocity metrics
+   - Category distribution
 
-Alert settings example:
-```json
-{
-  "risk_threshold": 0.8,
-  "notification_channels": ["email", "sms"],
-  "alert_frequency": "immediate",
-  "quiet_hours": {
-    "start": "22:00",
-    "end": "06:00"
-  }
-}
-```
+3. Real-time Alerts:
+   - Spending limit warnings
+   - Unusual activity
+   - Error notifications
+   - System alerts
+
+### Transaction Monitoring
+
+Monitor transactions through:
+
+1. Transaction List:
+   - Status (pending, completed, failed)
+   - Amount and merchant
+   - Risk score
+   - Approval status
+
+2. Filtering Options:
+   - Date range
+   - Amount range
+   - Merchant/category
+   - Status
+
+3. Export Capabilities:
+   - CSV export
+   - Detailed reports
+   - Audit logs
+
+## Risk Management
+
+### Risk Scoring
+
+Understanding risk scores:
+
+1. Low Risk (0.0 - 0.3):
+   - Known merchants
+   - Normal amounts
+   - Regular patterns
+
+2. Medium Risk (0.3 - 0.7):
+   - New merchants
+   - Higher amounts
+   - Unusual timing
+
+3. High Risk (0.7 - 1.0):
+   - Unusual patterns
+   - Very large amounts
+   - Multiple risk factors
+
+### Risk Mitigation
+
+Steps to manage risk:
+
+1. Preventive Controls:
+   - Set appropriate limits
+   - Configure merchant restrictions
+   - Define approval workflows
+
+2. Detective Controls:
+   - Monitor transactions
+   - Review alerts
+   - Analyze patterns
+
+3. Responsive Controls:
+   - Suspend suspicious activity
+   - Adjust limits
+   - Update restrictions
 
 ## Best Practices
 
 ### Agent Configuration
-1. Start Conservative
-   - Begin with strict rules
-   - Gradually relax as confidence grows
-   - Monitor impact of changes
 
-2. Regular Review
-   - Weekly performance review
-   - Monthly rule updates
-   - Quarterly strategy assessment
+1. Start Conservative:
+   - Lower initial limits
+   - Restricted merchant list
+   - Higher approval requirements
 
-3. Testing Changes
-   - Use test transactions
-   - Monitor false positives
-   - Track accuracy improvements
+2. Gradual Expansion:
+   - Increase limits based on performance
+   - Add trusted merchants
+   - Reduce approval requirements
 
-### Performance Optimization
-1. Rule Refinement
-   - Remove redundant rules
-   - Optimize rule order
-   - Update thresholds
+3. Regular Review:
+   - Monthly limit review
+   - Merchant list updates
+   - Risk threshold adjustments
 
-2. Resource Management
-   - Balance load across agents
-   - Schedule intensive tasks
-   - Monitor resource usage
+### Monitoring Tips
 
-3. Error Handling
-   - Define fallback behaviors
-   - Set up retry logic
-   - Maintain audit logs
+1. Daily Checks:
+   - Review pending approvals
+   - Check alerts
+   - Monitor spending levels
+
+2. Weekly Reviews:
+   - Analyze patterns
+   - Review performance
+   - Adjust settings
+
+3. Monthly Audits:
+   - Comprehensive review
+   - Update documentation
+   - Adjust strategies
+
+### Security Practices
+
+1. Access Control:
+   - Limit admin access
+   - Regular permission review
+   - Strong authentication
+
+2. Transaction Security:
+   - Review unusual patterns
+   - Verify new merchants
+   - Monitor after-hours activity
+
+3. System Security:
+   - Keep software updated
+   - Monitor API usage
+   - Review audit logs
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. High False Positive Rate
-   Solution:
-   - Review rule thresholds
-   - Update category mappings
-   - Adjust confidence levels
+1. Transaction Failures:
+   - Check spending limits
+   - Verify merchant restrictions
+   - Review error messages
 
-2. Slow Response Time
-   Solution:
-   - Check resource allocation
-   - Optimize rule processing
-   - Review API quotas
-
-3. Inconsistent Decisions
-   Solution:
-   - Audit rule conflicts
-   - Check version consistency
+2. Performance Issues:
+   - Check system status
    - Review recent changes
+   - Monitor response times
 
-### Support and Escalation
+3. Integration Problems:
+   - Verify API keys
+   - Check permissions
+   - Review logs
 
-1. First Level Support
-   - In-app troubleshooting
-   - Documentation reference
-   - Common solutions
+### Support Resources
 
-2. Second Level Support
-   - Technical support team
-   - Configuration review
-   - Performance analysis
+1. Technical Support:
+   - Email: support@example.com
+   - Phone: +1-xxx-xxx-xxxx
+   - Hours: 24/7
 
-3. Emergency Support
-   - 24/7 critical issues
-   - Immediate response
-   - System-wide problems
+2. Documentation:
+   - API Reference
+   - Integration Guides
+   - Best Practices
 
-## Security and Compliance
-
-### Access Control
-- Role-based permissions
-- Multi-factor authentication
-- Session management
-- Audit logging
-
-### Data Protection
-- Encryption standards
-- Data retention policies
-- Privacy compliance
-- Secure communication
-
-### Compliance Requirements
-- Regular audits
-- Policy updates
-- Training requirements
-- Documentation maintenance
+3. Training Resources:
+   - Video tutorials
+   - Webinars
+   - Knowledge base
 
 ## Updates and Maintenance
 
-### Version Management
-- Regular updates
-- Feature additions
-- Security patches
-- Performance improvements
+### System Updates
 
-### Maintenance Schedule
-- Weekly updates
-- Monthly reviews
-- Quarterly assessments
-- Annual audits
+1. Regular Updates:
+   - Security patches
+   - Feature updates
+   - Bug fixes
 
-### Change Management
-1. Planning
-   - Impact assessment
-   - Resource allocation
-   - Timeline development
+2. Major Releases:
+   - Advance notice
+   - Change documentation
+   - Migration guides
 
-2. Implementation
-   - Staged rollout
-   - Testing protocol
-   - Rollback plan
+3. Emergency Updates:
+   - Security fixes
+   - Critical patches
+   - Immediate deployment
 
-3. Monitoring
-   - Performance tracking
-   - Error monitoring
-   - User feedback
+### Maintenance Windows
+
+1. Scheduled Maintenance:
+   - Weekly: Minor updates
+   - Monthly: Major updates
+   - Quarterly: System upgrades
+
+2. Emergency Maintenance:
+   - Security incidents
+   - Critical issues
+   - System failures
+
+3. Communication:
+   - Advance notifications
+   - Status updates
+   - Completion reports

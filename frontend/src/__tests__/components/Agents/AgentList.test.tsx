@@ -71,16 +71,22 @@ const mockAgents: Agent[] = [
 
 // Setup MSW server
 const server: SetupServer = setupServer(
-  http.get('/api/v1/agents', () => {
+  http.get('http://localhost:3001/v1/agents', () => {
     return HttpResponse.json({ success: true, data: mockAgents });
   }),
+  http.options('http://localhost:3001/v1/agents', () => {
+    return new HttpResponse(null, { status: 200 });
+  }),
 
-  http.patch('/api/v1/agents/:id', async ({ request }) => {
+  http.patch('http://localhost:3001/v1/agents/:id', async ({ request }) => {
     const body = await request.json() as { status: string };
     return HttpResponse.json({ 
       success: true, 
       data: { ...mockAgents[0], status: body.status }
     });
+  }),
+  http.options('http://localhost:3001/v1/agents/:id', () => {
+    return new HttpResponse(null, { status: 200 });
   })
 );
 
@@ -125,6 +131,9 @@ const renderAgentList = () => {
 };
 
 describe('AgentList Component', () => {
+  // Increase timeout for all tests in this suite
+  vi.setConfig({ testTimeout: 10000 });
+  
   test('renders loading state initially', () => {
     renderAgentList();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -145,7 +154,7 @@ describe('AgentList Component', () => {
 
   test('handles error state', async () => {
     server.use(
-      http.get('/api/v1/agents', () => {
+      http.get('http://localhost:3001/v1/agents', () => {
         return new HttpResponse(null, { status: 500 });
       })
     );

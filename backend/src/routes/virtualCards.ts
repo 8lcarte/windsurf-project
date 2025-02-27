@@ -1,11 +1,20 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticate } from '../middleware/auth';
+import { Request } from 'express';
+
+// Extend the Express Request type
+interface AuthenticatedRequest extends Request {
+  user?: {
+    userId: string;
+    email: string;
+  };
+}
 
 export const router = Router();
 
 // Get all virtual cards
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, (req: AuthenticatedRequest, res) => {
   const userCards = virtualCards.filter(card => card.userId === req.user?.userId);
   res.json(userCards);
 });
@@ -41,8 +50,8 @@ let virtualCards = [
       allowedCategories: ['CLOUD_SERVICES', 'SOFTWARE'],
       blockedCategories: ['GAMBLING', 'ADULT'],
       maxAmountPerMerchant: {
-        'Amazon Web Services': 5000,
-        'Google Cloud': 3000
+        'Amazon Web Services': 0,
+        'Google Cloud': 0
       }
     },
     transactions: [
@@ -92,8 +101,8 @@ let virtualCards = [
       allowedCategories: ['ADVERTISING', 'MARKETING'],
       blockedCategories: ['GAMBLING', 'ADULT'],
       maxAmountPerMerchant: {
-        'Google Ads': 5000,
-        'Facebook Ads': 3000
+        'Google Ads': 0,
+        'Facebook Ads': 0
       }
     },
     metadata: {
@@ -129,7 +138,7 @@ let virtualCards = [
 ];
 
 // Get all virtual cards for a user
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, (req: AuthenticatedRequest, res) => {
   const userCards = virtualCards.filter(card => card.userId === req.user?.userId);
   // Don't send sensitive data
   const sanitizedCards = userCards.map(({ number, cvv, ...card }) => card);
@@ -137,7 +146,7 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // Create a new virtual card
-router.post('/', authenticate, (req, res) => {
+router.post('/', authenticate, (req: AuthenticatedRequest, res) => {
   const { name, spendLimit, customerId, agentName, metadata = {}, merchantCategories = [] } = req.body;
 
   const newCard = {
@@ -155,7 +164,10 @@ router.post('/', authenticate, (req, res) => {
     merchantControls: {
       allowedCategories: merchantCategories,
       blockedCategories: [],
-      maxAmountPerMerchant: {}
+      maxAmountPerMerchant: {
+        'Google Ads': 0,
+        'Facebook Ads': 0
+      }
     },
     transactions: [],
     merchantCategories,
@@ -174,7 +186,7 @@ router.post('/', authenticate, (req, res) => {
 });
 
 // Get card number (secured endpoint)
-router.post('/:id/number', authenticate, (req, res) => {
+router.post('/:id/number', authenticate, (req: AuthenticatedRequest, res) => {
   const card = virtualCards.find(
     (c) => c.id === req.params.id && c.userId === req.user?.userId
   );
@@ -190,7 +202,7 @@ router.post('/:id/number', authenticate, (req, res) => {
 });
 
 // Update card status (freeze/unfreeze)
-router.patch('/:id/status', authenticate, (req, res) => {
+router.patch('/:id/status', authenticate, (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const { frozen } = req.body;
 
@@ -211,7 +223,7 @@ router.patch('/:id/status', authenticate, (req, res) => {
 
 // Update spend limit
 // Update card association (customer ID and agent type)
-router.patch('/:id/association', authenticate, (req, res) => {
+router.patch('/:id/association', authenticate, (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const { customerId, agentName, metadata } = req.body;
 
@@ -234,7 +246,7 @@ router.patch('/:id/association', authenticate, (req, res) => {
   res.json(virtualCards[cardIndex]);
 });
 
-router.patch('/:id/limit', authenticate, (req, res) => {
+router.patch('/:id/limit', authenticate, (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const { spendLimit } = req.body;
 
@@ -252,5 +264,3 @@ router.patch('/:id/limit', authenticate, (req, res) => {
 
   res.json(virtualCards[cardIndex]);
 });
-
-

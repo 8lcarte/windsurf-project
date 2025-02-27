@@ -22,7 +22,26 @@ jobs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-      
+
+    - name: Set up environment variables
+      run: |
+        # Create backend environment file
+        cat << EOF > backend/.env.production
+        DATABASE_URL=${{ secrets.DATABASE_URL }}
+        REDIS_URL=${{ secrets.REDIS_URL }}
+        OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+        JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+        AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        ENVIRONMENT=production
+        EOF
+
+        # Create frontend environment file
+        cat << EOF > frontend/.env.production
+        VITE_API_URL=${{ secrets.API_URL }}
+        VITE_ENVIRONMENT=production
+        EOF
+        
     - name: Build and push backend
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -42,8 +61,126 @@ jobs:
         cd frontend
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Deploy Redis to ECS
+      run: |
+        # Create Redis task definition
+        cat << EOF > redis-task-def.json
+        {
+          "family": "redis",
+          "containerDefinitions": [
+            {
+              "name": "redis",
+              "image": "redis:6",
+              "memory": 512,
+              "portMappings": [
+                {
+                  "containerPort": 6379,
+                  "hostPort": 6379,
+                  "protocol": "tcp"
+                }
+              ]
+            }
+          ]
+        }
+        EOF
+        
+        # Register and deploy Redis task
+        aws ecs register-task-definition --cli-input-json file://redis-task-def.json
+        aws ecs update-service --cluster ai-payment-platform --service redis-service --force-new-deployment
+
+    - name: Configure CloudWatch monitoring
+      run: |
+        # Create CloudWatch dashboard
+        aws cloudwatch put-dashboard --dashboard-name AI-Platform-Dashboard --dashboard-body '{
+          "widgets": [
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  ["AI-Platform", "TransactionCount"],
+                  ["AI-Platform", "SuccessRate"],
+                  ["AI-Platform", "ErrorRate"]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "us-east-1",
+                "title": "Transaction Metrics"
+              }
+            },
+            {
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  ["AI-Platform", "APILatency"],
+                  ["AI-Platform", "DatabaseLatency"]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "us-east-1",
+                "title": "Latency Metrics"
+              }
+            }
+          ]
+        }'
+
+        # Create CloudWatch alarms
+        aws cloudwatch put-metric-alarm \
+          --alarm-name HighErrorRate \
+          --metric-name ErrorRate \
+          --namespace AI-Platform \
+          --statistic Average \
+          --period 300 \
+          --threshold 5 \
+          --comparison-operator GreaterThanThreshold \
+          --evaluation-periods 2 \
+          --alarm-actions ${{ secrets.SNS_ALERT_TOPIC }}
+
+        aws cloudwatch put-metric-alarm \
+          --alarm-name HighAPILatency \
+          --metric-name APILatency \
+          --namespace AI-Platform \
+          --statistic Average \
+          --period 300 \
+          --threshold 1000 \
+          --comparison-operator GreaterThanThreshold \
+          --evaluation-periods 2 \
+          --alarm-actions ${{ secrets.SNS_ALERT_TOPIC }}
         
     - name: Update ECS services
       run: |
-        aws ecs update-service --cluster ai-payment-platform --service backend-service --force-new-deployment
-        aws ecs update-service --cluster ai-payment-platform --service frontend-service --force-new-deployment
+        # Update backend service with new environment variables and monitoring
+        aws ecs update-service \
+          --cluster ai-payment-platform \
+          --service backend-service \
+          --force-new-deployment \
+          --enable-execute-command \
+          --task-definition backend \
+          --desired-count 2
+
+        # Update frontend service
+        aws ecs update-service \
+          --cluster ai-payment-platform \
+          --service frontend-service \
+          --force-new-deployment \
+          --task-definition frontend \
+          --desired-count 2
+
+    - name: Verify deployment
+      run: |
+        # Wait for services to stabilize
+        aws ecs wait services-stable \
+          --cluster ai-payment-platform \
+          --services backend-service frontend-service redis-service
+
+        # Check application health
+        curl -f ${{ secrets.API_URL }}/health || exit 1
+
+    - name: Send deployment notification
+      if: always()
+      uses: slackapi/slack-github-action@v1.24.0
+      with:
+        channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+        slack-message: "Deployment ${{ job.status }}\nCommit: ${{ github.sha }}\nEnvironment: Production"
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

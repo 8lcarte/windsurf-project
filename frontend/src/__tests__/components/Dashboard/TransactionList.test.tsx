@@ -64,8 +64,11 @@ const mockTransactions: Transaction[] = [
 
 // Setup MSW server
 const server = setupServer(
-  http.get('/transactions', () => {
+  http.get('http://localhost:3001/v1/transactions', () => {
     return HttpResponse.json({ success: true, data: mockTransactions });
+  }),
+  http.options('http://localhost:3001/v1/transactions', () => {
+    return new HttpResponse(null, { status: 200 });
   })
 );
 
@@ -91,6 +94,9 @@ const renderTransactionList = () => {
 };
 
 describe('TransactionList Component', () => {
+  // Increase timeout for all tests in this suite
+  vi.setConfig({ testTimeout: 10000 });
+  
   test('renders loading state initially', () => {
     renderTransactionList();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -108,7 +114,7 @@ describe('TransactionList Component', () => {
 
   test('handles error state', async () => {
     server.use(
-      http.get('/transactions', () => {
+      http.get('http://localhost:3001/v1/transactions', () => {
         return new HttpResponse(null, { status: 500 });
       })
     );

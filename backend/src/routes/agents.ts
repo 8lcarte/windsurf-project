@@ -171,8 +171,8 @@ router.patch('/:id', (req, res) => {
   ];
 
   Object.keys(req.body).forEach(key => {
-    if (allowedUpdates.includes(key)) {
-      agent[key] = req.body[key];
+    if (allowedUpdates.includes(key) && key in agent) {
+      (agent as any)[key] = req.body[key];
     }
   });
 

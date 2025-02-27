@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -7,7 +7,6 @@ import {
   Grid,
   Typography,
   Chip,
-  Divider,
   LinearProgress,
   Paper,
   Tab,
@@ -28,24 +27,34 @@ import {
   Warning as WarningIcon,
   CheckCircle as SuccessIcon,
   Error as ErrorIcon,
-  AccessTime as TimeIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { agentsApi } from '../../api/agents';
+import { agentsApi, Agent } from '../../api/agents';
 import { useQuery } from '@tanstack/react-query';
 
-interface Agent {
-  id: string;
-  name: string;
-  status: 'active' | 'inactive';
-  risk_level: 'low' | 'medium' | 'high' | 'critical';
-  current_daily_spend: number;
-  daily_spend_limit: number;
-  created_at: string;
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
 }
 
-interface AgentDetails extends Agent {
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`agent-tabpanel-${index}`}
+      aria-labelledby={`agent-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
+type AgentDetails = Agent & {
   description: string;
   openai_assistant_id: string;
   allowed_merchant_categories: string[];
@@ -73,30 +82,9 @@ interface AgentDetails extends Agent {
     risk_level: string;
     created_at: string;
   }>;
-}
+};
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`agent-tabpanel-${index}`}
-      aria-labelledby={`agent-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
-}
-
-export const AgentDetail: React.FC = () => {
+export function AgentDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
@@ -112,37 +100,12 @@ export const AgentDetail: React.FC = () => {
     retry: 1,
   });
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
   if (isLoading) {
     return <LinearProgress />;
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Alert 
-          severity="error" 
-          action={
-            <Button color="inherit" size="small" onClick={() => refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          Error loading agent details: {error instanceof Error ? error.message : 'Unknown error'}
-        </Alert>
-      </Box>
-    );
-  }
-
-  if (!agent) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="warning">Agent not found</Alert>
-      </Box>
-    );
   }
 
   if (error) {
@@ -170,16 +133,7 @@ export const AgentDetail: React.FC = () => {
   if (!agent) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert 
-          severity="warning"
-          action={
-            <Button color="inherit" size="small" onClick={() => navigate('/agents')}>
-              Back to Agents
-            </Button>
-          }
-        >
-          Agent not found
-        </Alert>
+        <Alert severity="warning">Agent not found</Alert>
       </Box>
     );
   }
@@ -429,4 +383,4 @@ export const AgentDetail: React.FC = () => {
       </TabPanel>
     </Box>
   );
-}; 
+}
